@@ -1,13 +1,20 @@
 use std::io;
+use etherparse::PacketHeaders;
 use pcap::{Active, Capture, Device};
 use crate::network_analyzer_components::looper::Looper;
 mod network_analyzer_components;
+
+pub fn select_debug() -> Capture<Active> {
+    let mut cap = Capture::from_device("\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}").unwrap()
+        .promisc(true)
+        .open().unwrap();
+    return cap;
+}
 
 pub fn select_default() -> Capture<Active> {
     let main_device = Device::lookup().expect("No default device found").expect("No default device found");
     let mut cap = Capture::from_device(main_device).unwrap()
         .promisc(true)
-        .snaplen(5000)
         .open().unwrap();
     return cap;
 }
@@ -30,14 +37,15 @@ pub fn select_device() -> Capture<Active> {
     println!("Selected {:?}",device.desc.as_ref().unwrap());
     let mut cap = Capture::from_device(device).unwrap()
         .promisc(true)
-        .snaplen(5000)
         .open().unwrap();
     return cap;
 }
 
 pub fn print_packets(mut cap:Capture<Active>){
     while let Ok(packet) = cap.next_packet() {
-        println!("received packet! {:?}", packet);
+        //println!("received packet! {:?}", packet);
+        let p=PacketHeaders::from_ethernet_slice(&packet).unwrap();
+        println!("{:?} and {:?}", p.ip, p.transport);
     }
 }
 
@@ -50,6 +58,7 @@ pub fn print_packets_background(mut cap:Capture<Active>){
     }
 }
 
+/*
 pub fn parse_packet(packet: &pcap::Packet) -> ParsedPacket {
     let timestamp = packet.header.ts.tv_sec;
     //let source_ip = packet.header.ts.tv_sec;
@@ -62,3 +71,4 @@ pub fn parse_packet(packet: &pcap::Packet) -> ParsedPacket {
     let parsed_packet = ParsedPacket::new(timestamp,source_ip,destination_ip,source_port,destination_port,protocol,length,info);
     return parsed_packet;
 }
+*/

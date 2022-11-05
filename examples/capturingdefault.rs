@@ -6,6 +6,6 @@ fn main() {
         println!("received packet! {:?}", packet);
     }*/
 
-    let mut cap = select_device();
-    print_packets_background(cap);
+    let mut cap = select_debug();
+    print_packets(cap);
 }
