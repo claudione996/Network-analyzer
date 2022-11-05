@@ -1,5 +1,4 @@
-//define a mod Looper
-mod looper {
+
     use std::sync::mpsc::{channel,Sender};
 
     #[derive(Clone)]
@@ -35,7 +34,6 @@ mod looper {
             self.tx.send(msg).unwrap();
         }
     }
-}
 
 
 
