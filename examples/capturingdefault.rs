@@ -1,4 +1,4 @@
-use Network_analyzer::network_analyzer::*;
+use Network_analyzer::*;
 
 fn main() {
    /* let mut cap = init_default();
