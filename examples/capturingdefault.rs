@@ -1,4 +1,4 @@
-use Network_analyzer::{select_default, print_packets, select_device};
+use Network_analyzer::network_analyzer::*;
 
 fn main() {
    /* let mut cap = init_default();
