@@ -7,5 +7,5 @@ fn main() {
     }*/
 
     let mut cap = select_device();
-    print_packets(cap);
+    print_packets_background(cap);
 }

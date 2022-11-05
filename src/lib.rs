@@ -2,6 +2,7 @@ pub mod network_analyzer{
 
     use std::io;
     use pcap::{Active, Capture, Device};
+    use crate::network_analyzer::network_analyzer_components::looper::Looper;
     pub mod network_analyzer_components;
 
     pub fn select_default() -> Capture<Active> {
@@ -47,6 +48,15 @@ pub mod network_analyzer{
     pub fn print_packets(mut cap:Capture<Active>){
         while let Ok(packet) = cap.next_packet() {
             println!("received packet! {:?}", packet);
+        }
+    }
+
+    /// only the print function is executed in the background, the capture is still blocking
+    pub fn print_packets_background(mut cap:Capture<Active>){
+        let mut looper = Looper::new(|p| println!("received packet! {}",p),|| println!("CLEANUP() CALLED"));
+        while let Ok(packet) = cap.next_packet() {
+            let p_str = format!("{:?}",packet);
+            looper.send(p_str);
         }
     }
 }
