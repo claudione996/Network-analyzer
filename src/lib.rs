@@ -1,7 +1,10 @@
+pub mod network_analyzer_components;
 use std::io;
 use pcap::{Active, Capture, Device};
-use crate::network_analyzer_components::looper::Looper;
-mod network_analyzer_components;
+use crate::network_analyzer_components::*;
+use network_analyzer_components::ParsedPacket::ParsedPacket;
+use crate::looper::Looper;
+use crate::network_analyzer_components::aggregator::Aggregator;
 
 pub fn select_default() -> Capture<Active> {
     let main_device = Device::lookup().expect("No default device found").expect("No default device found");
@@ -50,15 +53,25 @@ pub fn print_packets_background(mut cap:Capture<Active>){
     }
 }
 
-pub fn parse_packet(packet: &pcap::Packet) -> ParsedPacket {
-    let timestamp = packet.header.ts.tv_sec;
-    //let source_ip = packet.header.ts.tv_sec;
-    //let destination_ip = packet.header.ts.tv_sec;
-    //let source_port = packet.header.ts.tv_sec;
-    //let destination_port = packet.header.ts.tv_sec;
-    //let protocol = packet.header.ts.tv_sec;
-    let length = packet.header.ts.tv_sec;
-    //let info = packet.header.ts.tv_sec;
-    let parsed_packet = ParsedPacket::new(timestamp,source_ip,destination_ip,source_port,destination_port,protocol,length,info);
-    return parsed_packet;
+pub fn aggregate_list_of_parsed_packets(packet_list:Vec<ParsedPacket>){
+    let mut aggregator = Aggregator::new();
+    for packet in packet_list {
+        aggregator.send(packet);
+    }
 }
+
+
+
+
+//pub fn parse_packet(packet: &pcap::Packet) -> ParsedPacket {
+//    let timestamp = packet.header.ts.tv_sec;
+//    //let source_ip = packet.header.ts.tv_sec;
+//    //let destination_ip = packet.header.ts.tv_sec;
+//    //let source_port = packet.header.ts.tv_sec;
+//    //let destination_port = packet.header.ts.tv_sec;
+//    //let protocol = packet.header.ts.tv_sec;
+//    let length = packet.header.ts.tv_sec;
+//    //let info = packet.header.ts.tv_sec;
+//    let parsed_packet = ParsedPacket::new(timestamp,source_ip,destination_ip,source_port,destination_port,protocol,length,info);
+//    return parsed_packet;
+//}
