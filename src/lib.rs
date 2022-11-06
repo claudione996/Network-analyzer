@@ -5,7 +5,7 @@ use pcap::{Active, Capture, Device, Packet};
 use crate::network_analyzer_components::aggregator::Aggregator;
 use crate::network_analyzer_components::looper::Looper;
 use crate::network_analyzer_components::ParsedPacket::ParsedPacket;
-mod network_analyzer_components;
+pub mod network_analyzer_components;
 
 //used only for debugging
 pub fn select_debug() -> Capture<Active> {
