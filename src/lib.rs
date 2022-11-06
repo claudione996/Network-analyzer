@@ -45,12 +45,14 @@ pub fn select_device() -> Capture<Active> {
 
 pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let ph=PacketHeaders::from_ethernet_slice(&packet).unwrap();
-
     let mut source=String::new();
     let mut destination=String::new();
     let mut weight = 0;
     let mut ts=0;
     let mut trs_protocol =String::new();
+    let mut src_port =0;
+    let mut dest_port =0;
+    let mut show=true;
 
     match ph.ip {
         Some(x)=> match x {
@@ -70,24 +72,20 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
         },
         None => {}
     }
-
     match  ph.transport {
         Some(x)=> match x {
-            TransportHeader::Udp(_) => {trs_protocol=String::from("Udp")}
-            TransportHeader::Tcp(_) => {trs_protocol=String::from("Tcp")}
-            TransportHeader::Icmpv4(_) => {trs_protocol=String::from("Icmpv4")}
-            TransportHeader::Icmpv6(_) => {trs_protocol=String::from("Icmpv6")}
+            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize}
+            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize}
+            _ => {show=false}
         },
         _ => {}
     }
-
-    if weight!=0
+    if show
     {
-        let parsed_p= ParsedPacket::new(ts, source, destination, "0".to_string(), trs_protocol, weight);
+        let parsed_p= ParsedPacket::new(ts, source, destination, src_port, dest_port, trs_protocol, weight);
         //println!("{:?}", parsed_p);
         return Some(parsed_p);
     }
-
     None
 }
 

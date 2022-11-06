@@ -3,7 +3,8 @@ pub struct ParsedPacket {
     pub timestamp: usize,
     pub source_ip: String,
     pub destination_ip: String,
-    pub port: String,
+    pub source_port: usize,
+    pub destination_port: usize,
     pub protocol: String,
     pub weight: usize,
 }
@@ -13,7 +14,8 @@ impl ParsedPacket {
         timestamp: usize,
         source_ip: String,
         destination_ip: String,
-        port: String,
+        source_port: usize,
+        destination_port:usize,
         protocol: String,
         weight: usize,
     ) -> Self {
@@ -21,7 +23,8 @@ impl ParsedPacket {
             timestamp,
             source_ip,
             destination_ip,
-            port,
+            source_port,
+            destination_port,
             protocol,
             weight,
         }
