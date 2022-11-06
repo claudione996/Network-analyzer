@@ -2,10 +2,12 @@ use std::io;
 use etherparse::{IpHeader, PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
+use crate::network_analyzer_components::aggregator::Aggregator;
 use crate::network_analyzer_components::looper::Looper;
 use crate::network_analyzer_components::ParsedPacket::ParsedPacket;
 mod network_analyzer_components;
 
+//used only for debugging
 pub fn select_debug() -> Capture<Active> {
     let mut cap = Capture::from_device("\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}").unwrap()
         .promisc(true)
@@ -47,7 +49,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let ph=PacketHeaders::from_ethernet_slice(&packet).unwrap();
     let mut source=String::new();
     let mut destination=String::new();
-    let mut weight = 0;
+    let mut size = 0;
     let mut ts=0;
     let mut trs_protocol =String::new();
     let mut src_port =0;
@@ -62,7 +64,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
                 let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 d.pop();
                 destination=d;
-                weight=packet.header.len as usize;
+                size=packet.header.len as usize;
                 ts=packet.header.ts.tv_sec as usize;
                 show=true;
             },
@@ -80,7 +82,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     }
     if show
     {
-        let parsed_p= ParsedPacket::new(ts, source, destination, src_port, dest_port, trs_protocol, weight);
+        let parsed_p= ParsedPacket::new(ts, source, destination, src_port, dest_port, trs_protocol, size);
         //println!("{:?}", parsed_p);
         return Some(parsed_p);
     }
@@ -93,6 +95,19 @@ pub fn print_packets(mut cap:Capture<Active>){
         match p {
             None => {}
             Some(x) => {println!("{:?}",x);}
+        }
+    }
+}
+
+//used only for debugging
+pub fn send_to_aggregator(mut cap:Capture<Active>){
+    let agg=Aggregator::new();
+
+    while let Ok(packet) = cap.next_packet() {
+        let p=parse_packet(packet);
+        match p {
+            None => {}
+            Some(x) => {agg.send(x)}
         }
     }
 }

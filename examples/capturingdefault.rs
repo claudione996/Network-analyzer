@@ -7,5 +7,6 @@ fn main() {
     }*/
 
     let mut cap = select_debug();
-    print_packets(cap);
+    //print_packets(cap);
+    send_to_aggregator(cap);
 }

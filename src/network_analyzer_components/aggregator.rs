@@ -6,7 +6,7 @@ use crate::ParsedPacket;
 #[derive(Clone)]
 pub struct Aggregator{
     tx: Sender<ParsedPacket>,
-    aggregated_data: Arc<Mutex<HashMap<(String,String),(String,usize,String,String)>>>
+    aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
 }
 impl Aggregator{
     pub fn new() -> Self {
@@ -14,7 +14,7 @@ impl Aggregator{
         let(tx,rx) = channel::<ParsedPacket>();
 
         //declare an hashmap with key as tuple of (destination_ip,port) and value as tuple of (protocol, size, first_timestamp, last_timestamp)
-        let mut aggregated_data = Arc::new(Mutex::new(HashMap::<(String,String),(String,usize,String,String)>::new()));
+        let mut aggregated_data = Arc::new(Mutex::new(HashMap::<(String,usize),(String,usize,usize,usize)>::new()));
         let mut aggregated_data_clone = Arc::clone(&aggregated_data);
 
         std::thread::spawn( move || {
@@ -32,7 +32,7 @@ impl Aggregator{
                     Ok(p) => {
                         println!("processing: {:?}", p);
 
-                        let key = (p.destination_ip,p.port);
+                        let key = (p.destination_ip,p.destination_port);
                         let mut aggregated_map = aggregated_data_clone.lock().unwrap();
                         if aggregated_map.contains_key(&key) {
                             println!("Key already exists, updating value");
@@ -52,21 +52,7 @@ impl Aggregator{
     pub fn send(&self, packet: ParsedPacket){
         self.tx.send(packet).unwrap();
     }
-    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String,String),(String,usize,String,String)>>> {
+    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>> {
         Arc::clone(&self.aggregated_data)
     }
 }
-
-
-
-//fn main() {
-//    println!("Hello, world!");
-//    //declare a list of strings
-//    let list = vec!["one".to_string(),"two".to_string(),"three".to_string()];
-//    let l1 : Looper<String> = Looper::new(|m| println!("processing: {}",m),|| println!("CLEANUP() CALLED"));
-//    //send the list to the looper
-//    for i in list {
-//        l1.send(i);
-//    }
-//    l1.send("ultimo".to_string());
-//}
