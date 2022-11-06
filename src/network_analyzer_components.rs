@@ -1,2 +1,2 @@
 pub mod looper;
-mod ParsedPacket;
+pub(crate) mod ParsedPacket;

@@ -1,7 +1,9 @@
 use std::io;
-use etherparse::PacketHeaders;
-use pcap::{Active, Capture, Device};
+use etherparse::{IpHeader, PacketHeaders, TransportHeader};
+use etherparse::IpHeader::Version4;
+use pcap::{Active, Capture, Device, Packet};
 use crate::network_analyzer_components::looper::Looper;
+use crate::network_analyzer_components::ParsedPacket::ParsedPacket;
 mod network_analyzer_components;
 
 pub fn select_debug() -> Capture<Active> {
@@ -12,7 +14,7 @@ pub fn select_debug() -> Capture<Active> {
 }
 
 pub fn select_default() -> Capture<Active> {
-    let main_device = Device::lookup().expect("No default device found").expect("No default device found");
+    let main_device = Device::lookup().expect("lookup error").expect("No default device found");
     let mut cap = Capture::from_device(main_device).unwrap()
         .promisc(true)
         .open().unwrap();
@@ -41,11 +43,61 @@ pub fn select_device() -> Capture<Active> {
     return cap;
 }
 
+pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
+    let ph=PacketHeaders::from_ethernet_slice(&packet).unwrap();
+
+    let mut source=String::new();
+    let mut destination=String::new();
+    let mut weight = 0;
+    let mut ts=0;
+    let mut trs_protocol =String::new();
+
+    match ph.ip {
+        Some(x)=> match x {
+            Version4(h,e)=> {
+                let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+                s.pop();
+                source=s;
+
+                let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+                d.pop();
+                destination=d;
+
+                weight=packet.header.len as usize;
+                ts=packet.header.ts.tv_sec as usize;
+            },
+            _ => {}
+        },
+        None => {}
+    }
+
+    match  ph.transport {
+        Some(x)=> match x {
+            TransportHeader::Udp(_) => {trs_protocol=String::from("Udp")}
+            TransportHeader::Tcp(_) => {trs_protocol=String::from("Tcp")}
+            TransportHeader::Icmpv4(_) => {trs_protocol=String::from("Icmpv4")}
+            TransportHeader::Icmpv6(_) => {trs_protocol=String::from("Icmpv6")}
+        },
+        _ => {}
+    }
+
+    if weight!=0
+    {
+        let parsed_p= ParsedPacket::new(ts, source, destination, "0".to_string(), trs_protocol, weight);
+        //println!("{:?}", parsed_p);
+        return Some(parsed_p);
+    }
+
+    None
+}
+
 pub fn print_packets(mut cap:Capture<Active>){
     while let Ok(packet) = cap.next_packet() {
-        //println!("received packet! {:?}", packet);
-        let p=PacketHeaders::from_ethernet_slice(&packet).unwrap();
-        println!("{:?} and {:?}", p.ip, p.transport);
+        let p=parse_packet(packet);
+        match p {
+            None => {}
+            Some(x) => {println!("{:?}",x);}
+        }
     }
 }
 

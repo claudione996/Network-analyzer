@@ -1,21 +1,21 @@
 #[derive(Debug)]
 pub struct ParsedPacket {
-    pub timestamp: String,
+    pub timestamp: usize,
     pub source_ip: String,
     pub destination_ip: String,
     pub port: String,
     pub protocol: String,
-    pub size: usize,
+    pub weight: usize,
 }
 
 impl ParsedPacket {
     pub fn new(
-        timestamp: String,
+        timestamp: usize,
         source_ip: String,
         destination_ip: String,
         port: String,
         protocol: String,
-        size: usize,
+        weight: usize,
     ) -> Self {
         ParsedPacket {
             timestamp,
@@ -23,7 +23,7 @@ impl ParsedPacket {
             destination_ip,
             port,
             protocol,
-            size,
+            weight,
         }
     }
 }
