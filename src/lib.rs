@@ -52,21 +52,19 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut trs_protocol =String::new();
     let mut src_port =0;
     let mut dest_port =0;
-    let mut show=true;
-
+    let mut show=false;
     match ph.ip {
         Some(x)=> match x {
             Version4(h,e)=> {
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
                 source=s;
-
                 let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 d.pop();
                 destination=d;
-
                 weight=packet.header.len as usize;
                 ts=packet.header.ts.tv_sec as usize;
+                show=true;
             },
             _ => {}
         },
@@ -74,9 +72,9 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     }
     match  ph.transport {
         Some(x)=> match x {
-            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize}
-            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize}
-            _ => {show=false}
+            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
+            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
+            _ => {}
         },
         _ => {}
     }
