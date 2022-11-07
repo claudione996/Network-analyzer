@@ -123,9 +123,9 @@ fn test_parser(){
     //create a parser
     let mut parser = Parser::new(sender);
     //send the packet to the parser
-    let sender = parser.get_sender();
-    sender.send(packet).unwrap();
-    //parser.send(packet);
+    parser.send(packet);
+    //let sender = parser.get_sender();
+    //sender.send(packet).unwrap();
     //wait for the parser to finish
     std::thread::sleep(std::time::Duration::from_secs(1));
     //test the parsed packet
