@@ -54,7 +54,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut trs_protocol =String::new();
     let mut src_port =0;
     let mut dest_port =0;
-    let mut show=false;
+    let mut show=(false,false);
     match ph.ip {
         Some(x)=> match x {
             Version4(h,e)=> {
@@ -66,7 +66,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
                 destination=d;
                 size=packet.header.len as usize;
                 ts=packet.header.ts.tv_sec as usize;
-                show=true;
+                show.0=true;
             },
             _ => {}
         },
@@ -74,13 +74,13 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     }
     match  ph.transport {
         Some(x)=> match x {
-            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
-            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
+            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show.1=true}
+            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show.1=true}
             _ => {}
         },
         _ => {}
     }
-    if show
+    if show.0 && show.1
     {
         let parsed_p= ParsedPacket::new(ts, source, destination, src_port, dest_port, trs_protocol, size);
         //println!("{:?}", parsed_p);
@@ -120,18 +120,3 @@ pub fn print_packets_background(mut cap:Capture<Active>){
         looper.send(p_str);
     }
 }
-
-/*
-pub fn parse_packet(packet: &pcap::Packet) -> ParsedPacket {
-    let timestamp = packet.header.ts.tv_sec;
-    //let source_ip = packet.header.ts.tv_sec;
-    //let destination_ip = packet.header.ts.tv_sec;
-    //let source_port = packet.header.ts.tv_sec;
-    //let destination_port = packet.header.ts.tv_sec;
-    //let protocol = packet.header.ts.tv_sec;
-    let length = packet.header.ts.tv_sec;
-    //let info = packet.header.ts.tv_sec;
-    let parsed_packet = ParsedPacket::new(timestamp,source_ip,destination_ip,source_port,destination_port,protocol,length,info);
-    return parsed_packet;
-}
-*/
