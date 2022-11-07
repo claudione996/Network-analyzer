@@ -8,8 +8,6 @@ pub struct SocketListener{
     parser: Parser,
     aggregator:Aggregator,
     device:String,
-    aggregator_tx:Sender<ParsedPacket>
-
 }
 
 impl SocketListener {
@@ -18,7 +16,7 @@ impl SocketListener {
         let aggregator_tx=aggregator.get_sender();
         let parser=Parser::new(device_str, aggregator_tx.clone());
         let device=String::from(device_str);
-        SocketListener{parser,aggregator,device,aggregator_tx}
+        SocketListener{parser,aggregator,device}
     }
 
     pub fn pause(&self){
@@ -29,6 +27,7 @@ impl SocketListener {
     }
 
     pub fn resume(&mut self){
-        self.parser=Parser::new(self.device.as_str(), self.aggregator_tx.clone());
+        let aggregator_tx=self.aggregator.get_sender().clone();
+        self.parser=Parser::new(self.device.as_str(), aggregator_tx);
     }
 }
