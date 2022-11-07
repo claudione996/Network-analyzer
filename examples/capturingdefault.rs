@@ -1,12 +1,10 @@
 use Network_analyzer::*;
+use Network_analyzer::network_analyzer_components::socketlistener::SocketListener;
 
 fn main() {
-   /* let mut cap = init_default();
-    while let Ok(packet) = cap.next_packet() {
-        println!("received packet! {:?}", packet);
-    }*/
-
-    let mut cap = select_debug();
-    //print_packets(cap);
-    send_to_aggregator(cap);
+    let device = "\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}";
+    let sock=SocketListener::new(device);
+    std::thread::sleep(std::time::Duration::from_secs(5));
+    println!("sleep end");
+    sock.pause();
 }
