@@ -112,24 +112,45 @@ fn test_aggregator_multiple_destinations() {
 
 #[test]
 fn test_parser(){
-    let main_device = Device::lookup().expect("lookup error").expect("No default device found");
-    let mut cap = Capture::from_device(main_device).unwrap()
-        .promisc(true)
-        .open().unwrap();
-    //get the first packet
-    let packet = cap.next_packet().unwrap();
+    println!("test_parser starting");
     //define a channel to send the parsed packet
     let (sender, receiver) = mpsc::channel();
     //create a parser
-    let mut parser = Parser::new(sender);
-    //send the packet to the parser
-    parser.send(packet);
-    //let sender = parser.get_sender();
-    //sender.send(packet).unwrap();
+    println!("before parser declaration");
+    let mut _parser = Parser::new("\\Device\\NPF_{CD484432-E2CB-46E8-8FCC-3D919CF3533E}",sender);
+    println!("after parser declaration, before waiting 5s");
     //wait for the parser to finish
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    std::thread::sleep(std::time::Duration::from_secs(5));
+    println!("after waiting 5s");
     //test the parsed packet
     let parsed_packet = receiver.recv().unwrap();
     println!("parsed packet received: {:?}",parsed_packet);
+
 }
+
+#[test]
+fn test_parser_with_aggregator(){
+    let mut aggregator = Aggregator::new();
+    let mut _parser = Parser::new("\\Device\\NPF_{CD484432-E2CB-46E8-8FCC-3D919CF3533E}",aggregator.get_sender());
+    //wait for the parser/aggregator to process some packets
+    println!("waiting for the parser/aggregator to process some packets");
+    std::thread::sleep(std::time::Duration::from_secs(5));
+    //print the aggregated data
+    let binding = aggregator.get_aggregated_data();
+    let aggregated_data = binding.lock().unwrap();
+    println!("aggregated data: {:?}",aggregated_data);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
