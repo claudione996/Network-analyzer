@@ -55,4 +55,7 @@ impl Aggregator{
     pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>> {
         Arc::clone(&self.aggregated_data)
     }
+    pub fn get_sender(&self) -> Sender<ParsedPacket> {
+        self.tx.clone()
+    }
 }
