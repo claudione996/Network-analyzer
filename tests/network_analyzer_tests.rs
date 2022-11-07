@@ -138,7 +138,9 @@ fn test_parser_with_aggregator(){
     //print the aggregated data
     let binding = aggregator.get_aggregated_data();
     let aggregated_data = binding.lock().unwrap();
-    println!("aggregated data: {:?}",aggregated_data);
+    for (key,value) in aggregated_data.iter() {
+        println!("aggregated record received: {:?}, {:?}",key,value);
+    }
 
 }
 
