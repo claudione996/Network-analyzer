@@ -1,4 +1,9 @@
-use std::io;
+use std::fs::File;
+use std::{fs, io};
+use std::collections::HashMap;
+use std::io::{BufWriter, Write};
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use etherparse::{IpHeader, PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
@@ -119,4 +124,35 @@ pub fn print_packets_background(mut cap:Capture<Active>){
         let p_str = format!("{:?}",packet);
         looper.send(p_str);
     }
+}
+
+pub fn create_dir_report(filename:&str) -> BufWriter<File> {
+    fs::create_dir("report").expect("Error creating dir");
+    let mut path =String::from("report/");
+    path.push_str(filename);
+    path.push_str(".txt");
+    let input=File::create(path.as_str()).expect("Error creating output file\n\r");
+    let mut output = BufWriter::new(input);
+    return output;
+
+}
+//, aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
+pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>){
+   let aggregated_data=aggregated_data.lock().unwrap();
+
+    let mut output =create_dir_report(filename);
+   // output.write_all(aggregated_data).unwrap();
+    for x in aggregated_data.iter(){
+        let key=x.0;
+        let value=x.1;
+        let k1=key.0.clone();
+        let k2=key.1;
+        let val1=value.0.clone();
+        let val2=value.1;
+        let val3=value.2;
+        let val4=value.3;
+        writeln!(output, "{} - {} ||| {} - {} - {} - {} ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
+    }
+
+
 }
