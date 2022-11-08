@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::mpsc::Sender;
-use crate::network_analyzer_components::aggregator::Aggregator;
-use crate::network_analyzer_components::ParsedPacket::ParsedPacket;
-use crate::network_analyzer_components::parser::Parser;
+use crate::modules::aggregator::Aggregator;
+use crate::modules::parser::Parser;
+
 
 pub struct SocketListener{
     parser: Parser,

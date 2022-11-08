@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Sender};
 use pcap::{Active, Capture, Packet};
-use crate::{parse_packet, ParsedPacket};
+use crate::modules::lib::parse_packet;
+use crate::modules::parsedpacket::ParsedPacket;
 
 /// Struct that receives pcap Packets from a channel, parses them into ParsedPackets and sends them through another channel
 #[derive(Clone)]

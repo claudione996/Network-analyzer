@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Sender};
-use crate::ParsedPacket;
+use crate::modules::parsedpacket::ParsedPacket;
 
 #[derive(Clone)]
 pub struct Aggregator{

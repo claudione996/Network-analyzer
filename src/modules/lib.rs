@@ -2,10 +2,10 @@ use std::io;
 use etherparse::{IpHeader, PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
-use crate::network_analyzer_components::aggregator::Aggregator;
-use crate::network_analyzer_components::looper::Looper;
-use crate::network_analyzer_components::ParsedPacket::ParsedPacket;
-pub mod network_analyzer_components;
+use crate::modules::aggregator::Aggregator;
+use crate::modules::looper::Looper;
+use crate::modules::parsedpacket::ParsedPacket;
+
 
 //used only for debugging
 pub fn select_debug() -> Capture<Active> {
