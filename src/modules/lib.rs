@@ -127,7 +127,11 @@ pub fn print_packets_background(mut cap:Capture<Active>){
 }
 
 pub fn create_dir_report(filename:&str) -> BufWriter<File> {
-    fs::create_dir("report").expect("Error creating dir");
+    let res_dir=fs::create_dir("report");
+    match res_dir {
+        Ok(_) => {}
+        Err(_) => {}
+    }
     let mut path =String::from("report/");
     path.push_str(filename);
     path.push_str(".txt");
