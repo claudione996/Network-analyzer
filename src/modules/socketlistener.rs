@@ -16,6 +16,9 @@ impl SocketListener {
         let aggregator=Aggregator::new();
         let aggregator_tx=aggregator.get_sender();
         let parser=Parser::new(device_str, aggregator_tx.clone());
+
+        //parser.drop_cap();
+
         let device=String::from(device_str);
         let filename=String::from(filename);
         SocketListener{parser,aggregator,device,filename}

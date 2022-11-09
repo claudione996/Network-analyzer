@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Sender};
-use pcap::{Active, Capture, Packet};
+use pcap::{Active, Capture, Error, Packet};
 use crate::modules::lib::parse_packet;
 use crate::modules::parsedpacket::ParsedPacket;
 
 /// Struct that receives pcap Packets from a channel, parses them into ParsedPackets and sends them through another channel
-#[derive(Clone)]
+
 pub struct Parser{
+    stopped:Arc<Mutex<bool>>
 }
 impl Parser{
     /// Creates a new Parser that receives pcap Packets through a channel and forwards ParsedPackets to the given Sender
@@ -19,20 +20,43 @@ impl Parser{
             .promisc(true)
             .open().expect("Failed to open device");
 
+        let a=Arc::new(Mutex::new(false));
+        let stopped=a.clone();
+
         std::thread::spawn( move || {
 
             println!("Parser thread started");
 
-            while let Ok(packet) = cap.next_packet() {
-                let p=parse_packet(packet);
-                match p {
-                    None => {println!("Error parsing packet");},
-                    Some(x) => {aggregator_tx.send(x).unwrap();}
+            loop {
+
+                {
+                    let mut stopped =stopped.lock().unwrap();
+                    if *stopped {println!("parser stopped");break}
+
+                    println!("prova");
+
+                    match cap.next_packet() {
+                        Ok(packet) => { let p=parse_packet(packet);
+                            match p {
+                                None => {println!("Error parsing packet");},
+                                Some(x) => {aggregator_tx.send(x).unwrap();}
+                            } },
+                        Err(_) => {break}
+                    }
+
                 }
+
             }
 
         });
-        Parser { }
+        Parser{stopped:a}
+    }
+
+    pub fn drop_cap(&self){
+        println!("1");
+        let mut stopped =self.stopped.lock().unwrap();
+        println!("2");
+        *stopped=true;
     }
 
 }
