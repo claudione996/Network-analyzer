@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::sync::mpsc::Sender;
 use crate::modules::aggregator::Aggregator;
 use crate::modules::lib::write_report;
 use crate::modules::parser::Parser;
@@ -25,7 +23,7 @@ impl SocketListener {
     }
 
     pub fn pause(&self){
-
+    self.parser.drop_cap();
     }
 
     pub fn resume(&mut self){

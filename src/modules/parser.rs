@@ -1,7 +1,6 @@
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, Sender};
-use pcap::{Active, Capture, Error, Packet};
+use std::sync::mpsc::{Sender};
+use pcap::{Capture};
 use crate::modules::lib::parse_packet;
 use crate::modules::parsedpacket::ParsedPacket;
 
@@ -53,9 +52,9 @@ impl Parser{
     }
 
     pub fn drop_cap(&self){
-        println!("1");
+        //println!("1");
         let mut stopped =self.stopped.lock().unwrap();
-        println!("2");
+        //println!("2");
         *stopped=true;
     }
 
