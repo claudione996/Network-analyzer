@@ -23,7 +23,7 @@ impl SocketListener {
     }
 
     pub fn pause(&self){
-    self.parser.drop_cap();
+    self.parser.stop_iter_cap();
     }
 
     pub fn resume(&mut self){
