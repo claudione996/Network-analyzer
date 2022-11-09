@@ -8,7 +8,6 @@ use etherparse::{IpHeader, PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
 use crate::modules::aggregator::Aggregator;
-use crate::modules::looper::Looper;
 use crate::modules::parsedpacket::ParsedPacket;
 
 
@@ -114,15 +113,6 @@ pub fn send_to_aggregator(mut cap:Capture<Active>){
             None => {}
             Some(x) => {agg.send(x)}
         }
-    }
-}
-
-/// only the print function is executed in the background, the capture is still blocking
-pub fn print_packets_background(mut cap:Capture<Active>){
-    let mut looper = Looper::new(|p| println!("received packet! {}",p),|| println!("CLEANUP() CALLED"));
-    while let Ok(packet) = cap.next_packet() {
-        let p_str = format!("{:?}",packet);
-        looper.send(p_str);
     }
 }
 

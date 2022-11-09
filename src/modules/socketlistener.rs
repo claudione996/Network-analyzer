@@ -22,17 +22,11 @@ impl SocketListener {
     }
 
     pub fn pause(&self){
-        drop(&self.parser);
-        let data=self.aggregator.get_aggregated_data();
-        let data=data.lock().unwrap();
-        println!("PAUSE");
 
     }
 
     pub fn resume(&mut self){
-        let aggregator_tx=self.aggregator.get_sender().clone();
-        self.parser=Parser::new(self.device.as_str(), aggregator_tx);
-        println!("RESUME");
+
     }
 
     pub fn stop(&self){
