@@ -7,7 +7,8 @@ use crate::modules::parsedpacket::ParsedPacket;
 /// Struct that receives pcap Packets from a channel, parses them into ParsedPackets and sends them through another channel
 
 pub struct Parser{
-    stopped:Arc<Mutex<bool>>
+    stopped:Arc<Mutex<bool>>,
+    cv:Arc<Condvar>
 }
 impl Parser{
     /// Creates a new Parser that receives pcap Packets through a channel and forwards ParsedPackets to the given Sender
@@ -22,10 +23,12 @@ impl Parser{
         let a=Arc::new(Mutex::new(false));
         let stopped=a.clone();
 
+        let cv=Arc::new(Condvar::new());
 
+        let cv1=cv.clone();
 
         std::thread::spawn( move || {
-            let cv=Condvar::new();
+
 
             println!("Parser thread started");
 
@@ -53,14 +56,22 @@ impl Parser{
             }
 
         });
-        Parser{stopped:a}
+        Parser{stopped:a,cv:cv1}
     }
 
     pub fn stop_iter_cap(&self){
-        println!("p1");
+        println!("stop1");
         let mut stopped =self.stopped.lock().unwrap();
-        println!("p2");
+        println!("stop2");
         *stopped=true;
+    }
+
+    pub fn resume_iter_cap(&self){
+        println!("resume1");
+        let mut stopped =self.stopped.lock().unwrap();
+        println!("resume2");
+        *stopped=false;
+        self.cv.notify_one();
     }
 
 

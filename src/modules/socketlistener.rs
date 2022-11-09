@@ -26,8 +26,8 @@ impl SocketListener {
     self.parser.stop_iter_cap();
     }
 
-    pub fn resume(&mut self){
-
+    pub fn resume(&self){
+    self.parser.resume_iter_cap();
     }
 
     pub fn stop(&self){
