@@ -25,7 +25,7 @@ impl Analyzer{
 
         match number{
             1 => {println!("choice 1: pausing SocketListener and report writer"); self.sl.pause(); self.report_writer.pause();},
-            2 => {println!("choice 2: resuming SocketListener and report writer"); self.sl.resume(); self.report_writer.proceed();}
+            2 => {println!("choice 2: resuming SocketListener and report writer"); self.sl.resume(); self.report_writer.resume();}
             _ => {println!("invalid input: select either 1 (to pause) or 2 (to resume)");},
         }
 

@@ -6,7 +6,7 @@ use std::sync::mpsc::{channel, Sender};
 use crate::modules::lib::write_report;
 use crate::modules::parsedpacket::ParsedPacket;
 
-#[derive(PartialEq)]
+#[derive(PartialEq,Debug)]
 enum Command {
     PROCEED,
     PAUSE,
@@ -27,7 +27,7 @@ impl ReportWriter {
         //generate all the Arcs
         let report_path = Arc::new(Mutex::new(report_path));
         let rwr_time = Arc::new(Mutex::new(rewrite_time));
-        let cmd = Arc::new(Mutex::new(Command::PAUSE));
+        let cmd = Arc::new(Mutex::new(Command::PROCEED));
         let cv_cmd = Arc::new(Condvar::new());
 
         //clone the Arcs for the thread
@@ -60,10 +60,11 @@ impl ReportWriter {
                         //get the lock on cmd again and check if it is still proceed
                         let cmd = cmd_clone.lock().unwrap();
                         if *cmd == Command::PROCEED{
-                            println!("ReportWriter thread awoken, writing report");
+                            println!("ReportWriter thread awake, writing report");
                             let report_path = report_path_clone.lock().unwrap();
                             write_report((*report_path).as_str(), aggregated_data_clone.clone());
                         }
+                        else { println!("Report Writer received command: {:?} while sleeping so the report will not be written",*cmd); }
                     }
                 }
             }
@@ -77,7 +78,7 @@ impl ReportWriter {
         self.cv_cmd.notify_one();
     }
 
-    pub fn proceed(&self) {
+    pub fn resume(&self) {
         let mut cmd = self.cmd.lock().unwrap();
         *cmd = Command::PROCEED;
         self.cv_cmd.notify_one();
