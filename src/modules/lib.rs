@@ -1,15 +1,18 @@
-use std::io;
-use etherparse::{IpHeader, PacketHeaders, TransportHeader};
+use std::fs::File;
+use std::{fs, io};
+use std::collections::HashMap;
+use std::io::{BufWriter, Write};
+use std::sync::{Arc, Mutex};
+use etherparse::{PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
-use crate::network_analyzer_components::aggregator::Aggregator;
-use crate::network_analyzer_components::looper::Looper;
-use crate::network_analyzer_components::ParsedPacket::ParsedPacket;
-pub mod network_analyzer_components;
+use crate::modules::aggregator::Aggregator;
+use crate::modules::parsedpacket::ParsedPacket;
+
 
 //used only for debugging
 pub fn select_debug() -> Capture<Active> {
-    let mut cap = Capture::from_device("\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}").unwrap()
+    let cap = Capture::from_device("\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}").unwrap()
         .promisc(true)
         .open().unwrap();
     return cap;
@@ -17,7 +20,7 @@ pub fn select_debug() -> Capture<Active> {
 
 pub fn select_default() -> Capture<Active> {
     let main_device = Device::lookup().expect("lookup error").expect("No default device found");
-    let mut cap = Capture::from_device(main_device).unwrap()
+    let cap = Capture::from_device(main_device).unwrap()
         .promisc(true)
         .open().unwrap();
     return cap;
@@ -39,7 +42,7 @@ pub fn select_device() -> Capture<Active> {
     number-=1;
     let device = dev_list[number].clone();
     println!("Selected {:?}",device.desc.as_ref().unwrap());
-    let mut cap = Capture::from_device(device).unwrap()
+    let cap = Capture::from_device(device).unwrap()
         .promisc(true)
         .open().unwrap();
     return cap;
@@ -57,7 +60,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut show=(false,false);
     match ph.ip {
         Some(x)=> match x {
-            Version4(h,e)=> {
+            Version4(h,_)=> {
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
                 source=s;
@@ -112,11 +115,41 @@ pub fn send_to_aggregator(mut cap:Capture<Active>){
     }
 }
 
-/// only the print function is executed in the background, the capture is still blocking
-pub fn print_packets_background(mut cap:Capture<Active>){
-    let mut looper = Looper::new(|p| println!("received packet! {}",p),|| println!("CLEANUP() CALLED"));
-    while let Ok(packet) = cap.next_packet() {
-        let p_str = format!("{:?}",packet);
-        looper.send(p_str);
+pub fn create_dir_report(filename:&str) -> BufWriter<File> {
+    let res_dir=fs::create_dir("report");
+    match res_dir {
+        Ok(_) => {}
+        Err(_) => {}
     }
+    let mut path =String::from("report/");
+    path.push_str(filename);
+    path.push_str(".txt");
+    let input=File::create(path.as_str()).expect("Error creating output file\n\r");
+    let output = BufWriter::new(input);
+    return output;
+
+}
+//, aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
+pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>){
+   let aggregated_data=aggregated_data.lock().unwrap();
+
+    let mut output =create_dir_report(filename);
+   // output.write_all(aggregated_data).unwrap();
+    writeln!(output, "-------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
+    writeln!(output, "|   Dst IP address   | Dst port |  Protocol  |   Bytes    |  Initial timestamp  |   Final timestamp   |").expect("Error writing output file\n\r");
+    writeln!(output, "-------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
+
+    for x in aggregated_data.iter(){
+        let key=x.0;
+        let value=x.1;
+        let k1=key.0.clone();
+        let k2=key.1;
+        let val1=value.0.clone();
+        let val2=value.1;
+        let val3=value.2;
+        let val4=value.3;
+        writeln!(output, "| {0:<15} \t| {1:<5} \t| {2:<7} \t| {3:<9} \t| {4:<15} \t| {5:<3} ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
+    }
+
+
 }
