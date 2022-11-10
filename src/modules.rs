@@ -4,3 +4,4 @@ pub mod parser;
 pub mod socketlistener;
 pub mod lib;
 pub mod analyzer;
+mod report_writer;
