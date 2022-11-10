@@ -9,7 +9,7 @@ pub struct Analyzer{
 
 impl Analyzer{
     pub fn new(device:&str,filename:&str,timer:u64)->Self{
-        let sl=SocketListener::new(device,filename);
+        let sl=SocketListener::new(device);
         let report_writer = ReportWriter::new(filename.to_string(), timer, sl.get_aggregated_data());
         Analyzer{sl,report_writer}
     }
