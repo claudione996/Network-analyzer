@@ -2,19 +2,17 @@ use std::fs::File;
 use std::{fs, io};
 use std::collections::HashMap;
 use std::io::{BufWriter, Write};
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use etherparse::{IpHeader, PacketHeaders, TransportHeader};
+use etherparse::{PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
 use crate::modules::aggregator::Aggregator;
-use crate::modules::looper::Looper;
 use crate::modules::parsedpacket::ParsedPacket;
 
 
 //used only for debugging
 pub fn select_debug() -> Capture<Active> {
-    let mut cap = Capture::from_device("\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}").unwrap()
+    let cap = Capture::from_device("\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}").unwrap()
         .promisc(true)
         .open().unwrap();
     return cap;
@@ -22,7 +20,7 @@ pub fn select_debug() -> Capture<Active> {
 
 pub fn select_default() -> Capture<Active> {
     let main_device = Device::lookup().expect("lookup error").expect("No default device found");
-    let mut cap = Capture::from_device(main_device).unwrap()
+    let cap = Capture::from_device(main_device).unwrap()
         .promisc(true)
         .open().unwrap();
     return cap;
@@ -44,7 +42,7 @@ pub fn select_device() -> Capture<Active> {
     number-=1;
     let device = dev_list[number].clone();
     println!("Selected {:?}",device.desc.as_ref().unwrap());
-    let mut cap = Capture::from_device(device).unwrap()
+    let cap = Capture::from_device(device).unwrap()
         .promisc(true)
         .open().unwrap();
     return cap;
@@ -62,7 +60,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut show=(false,false);
     match ph.ip {
         Some(x)=> match x {
-            Version4(h,e)=> {
+            Version4(h,_)=> {
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
                 source=s;
@@ -117,15 +115,6 @@ pub fn send_to_aggregator(mut cap:Capture<Active>){
     }
 }
 
-/// only the print function is executed in the background, the capture is still blocking
-pub fn print_packets_background(mut cap:Capture<Active>){
-    let mut looper = Looper::new(|p| println!("received packet! {}",p),|| println!("CLEANUP() CALLED"));
-    while let Ok(packet) = cap.next_packet() {
-        let p_str = format!("{:?}",packet);
-        looper.send(p_str);
-    }
-}
-
 pub fn create_dir_report(filename:&str) -> BufWriter<File> {
     let res_dir=fs::create_dir("report");
     match res_dir {
@@ -136,7 +125,7 @@ pub fn create_dir_report(filename:&str) -> BufWriter<File> {
     path.push_str(filename);
     path.push_str(".txt");
     let input=File::create(path.as_str()).expect("Error creating output file\n\r");
-    let mut output = BufWriter::new(input);
+    let output = BufWriter::new(input);
     return output;
 
 }
