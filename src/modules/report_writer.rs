@@ -54,10 +54,10 @@ impl ReportWriter {
                     Command::PROCEED => {
                         let rwr_time = rwr_time_clone.lock().unwrap();
                         println!("ReportWriter thread proceeding, will wait for: {:?}", rwr_time);
-                        drop(cmd);
                         //release the lock on cmd
+                        drop(cmd);
                         std::thread::sleep(std::time::Duration::from_secs(*rwr_time as u64));
-                        //get the lock on cmd again and check if it is still proceed
+                        //get the lock on cmd again and check if it is still "PROCEED"
                         let cmd = cmd_clone.lock().unwrap();
                         if *cmd == Command::PROCEED{
                             println!("ReportWriter thread awake, writing report");

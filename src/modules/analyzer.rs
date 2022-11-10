@@ -33,4 +33,23 @@ impl Analyzer{
         //std::thread::sleep(std::time::Duration::from_secs(10));
 
     }
+
+    pub fn pause(&self){
+        println!("choice 1: pausing SocketListener and report writer");
+        self.sl.pause();
+        self.report_writer.pause();
+    }
+
+    pub fn resume(&self){
+        println!("choice 2: resuming SocketListener and report writer");
+        self.sl.resume();
+        self.report_writer.resume();
+    }
+
+    pub fn exit(&self){
+        //TODO: implement exit also for SocketListener and its submodules (parser and aggregator)
+        // such that they can be stopped gracefully (thread exits from the loop)
+        self.sl.pause();
+        self.report_writer.exit();
+    }
 }
