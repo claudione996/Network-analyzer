@@ -146,6 +146,10 @@ pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String,usi
 
     let mut output =create_dir_report(filename);
    // output.write_all(aggregated_data).unwrap();
+    writeln!(output, "-------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
+    writeln!(output, "|   Dst IP address   | Dst port |  Protocol  |   Bytes    |  Initial timestamp  |   Final timestamp   |").expect("Error writing output file\n\r");
+    writeln!(output, "-------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
+
     for x in aggregated_data.iter(){
         let key=x.0;
         let value=x.1;
@@ -155,7 +159,7 @@ pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String,usi
         let val2=value.1;
         let val3=value.2;
         let val4=value.3;
-        writeln!(output, "{} - {} ||| {} - {} - {} - {} ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
+        writeln!(output, "| {0:<15} \t| {1:<5} \t| {2:<7} \t| {3:<9} \t| {4:<15} \t| {5:<3} ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
     }
 
 
