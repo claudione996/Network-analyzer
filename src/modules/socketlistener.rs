@@ -30,6 +30,10 @@ impl SocketListener {
     self.parser.resume_iter_cap();
     }
 
+    pub fn get_aggregated_data(&self)->std::sync::Arc<std::sync::Mutex<std::collections::HashMap<(String, usize),(String, usize, usize, usize)>>>{
+        self.aggregator.get_aggregated_data()
+    }
+
     pub fn stop(&self){
         write_report(self.filename.as_str(), self.aggregator.get_aggregated_data());
     }

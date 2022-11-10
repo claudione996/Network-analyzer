@@ -6,6 +6,7 @@ use std::sync::mpsc::{channel, Sender};
 use crate::modules::lib::write_report;
 use crate::modules::parsedpacket::ParsedPacket;
 
+#[derive(PartialEq)]
 enum Command {
     PROCEED,
     PAUSE,
@@ -15,18 +16,18 @@ enum Command {
 #[derive(Clone)]
 pub struct ReportWriter{
     report_path: Arc<Mutex<String>>,
-    rewrite_time: Arc<Mutex<usize>>,
+    rewrite_time: Arc<Mutex<u64>>,
     aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>,
     cmd: Arc<Mutex<Command>>,
     cv_cmd: Arc<Condvar>
 }
 
 impl ReportWriter {
-    pub fn new(report_path: String, rewrite_time: usize, aggregated_data: Arc<Mutex<HashMap<(String, usize),(String, usize, usize, usize)>>>) -> Self {
+    pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<(String, usize),(String, usize, usize, usize)>>>) -> Self {
         //generate all the Arcs
         let report_path = Arc::new(Mutex::new(report_path));
         let rwr_time = Arc::new(Mutex::new(rewrite_time));
-        let cmd = Arc::new(Mutex::new(Command::PROCEED));
+        let cmd = Arc::new(Mutex::new(Command::PAUSE));
         let cv_cmd = Arc::new(Condvar::new());
 
         //clone the Arcs for the thread
@@ -53,10 +54,16 @@ impl ReportWriter {
                     Command::PROCEED => {
                         let rwr_time = rwr_time_clone.lock().unwrap();
                         println!("ReportWriter thread proceeding, will wait for: {:?}", rwr_time);
+                        drop(cmd);
+                        //release the lock on cmd
                         std::thread::sleep(std::time::Duration::from_secs(*rwr_time as u64));
-                        println!("ReportWriter thread awoken, writing report");
-                        let report_path = report_path_clone.lock().unwrap();
-                        write_report((*report_path).as_str(), aggregated_data_clone.clone());
+                        //get the lock on cmd again and check if it is still proceed
+                        let cmd = cmd_clone.lock().unwrap();
+                        if *cmd == Command::PROCEED{
+                            println!("ReportWriter thread awoken, writing report");
+                            let report_path = report_path_clone.lock().unwrap();
+                            write_report((*report_path).as_str(), aggregated_data_clone.clone());
+                        }
                     }
                 }
             }
@@ -82,12 +89,12 @@ impl ReportWriter {
         self.cv_cmd.notify_one();
     }
 
-    pub fn set_rewrite_time(&self, rewrite_time: usize) {
+    pub fn set_rewrite_time(&self, rewrite_time: u64) {
         let mut rwr_time = self.rewrite_time.lock().unwrap();
         *rwr_time = rewrite_time;
     }
 
-    pub fn get_rewrite_time(&self) -> usize {
+    pub fn get_rewrite_time(&self) -> u64 {
         let rwr_time = self.rewrite_time.lock().unwrap();
         *rwr_time
     }
