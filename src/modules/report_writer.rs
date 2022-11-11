@@ -17,13 +17,13 @@ enum Command {
 pub struct ReportWriter{
     report_path: Arc<Mutex<String>>,
     rewrite_time: Arc<Mutex<u64>>,
-    aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>,
+    aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,String,String)>>>,
     cmd: Arc<Mutex<Command>>,
     cv_cmd: Arc<Condvar>
 }
 
 impl ReportWriter {
-    pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<(String, usize),(String, usize, usize, usize)>>>) -> Self {
+    pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<(String, usize),(String, usize, String, String)>>>) -> Self {
         //generate all the Arcs
         let report_path = Arc::new(Mutex::new(report_path));
         let rwr_time = Arc::new(Mutex::new(rewrite_time));
@@ -100,7 +100,7 @@ impl ReportWriter {
         *rwr_time
     }
 
-    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String, usize),(String, usize, usize, usize)>>> {
+    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String, usize),(String, usize, String, String)>>> {
         Arc::clone(&self.aggregated_data)
     }
 

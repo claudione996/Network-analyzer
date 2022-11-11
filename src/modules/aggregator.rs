@@ -6,7 +6,7 @@ use crate::modules::parsedpacket::ParsedPacket;
 #[derive(Clone)]
 pub struct Aggregator{
     tx: Sender<ParsedPacket>,
-    aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
+    aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,String,String)>>>
 }
 impl Aggregator{
     pub fn new() -> Self {
@@ -14,7 +14,7 @@ impl Aggregator{
         let(tx,rx) = channel::<ParsedPacket>();
 
         //declare an hashmap with key as tuple of (destination_ip,port) and value as tuple of (protocol, size, first_timestamp, last_timestamp)
-        let mut aggregated_data = Arc::new(Mutex::new(HashMap::<(String,usize),(String,usize,usize,usize)>::new()));
+        let mut aggregated_data = Arc::new(Mutex::new(HashMap::<(String,usize),(String,usize,String,String)>::new()));
         let mut aggregated_data_clone = Arc::clone(&aggregated_data);
 
         std::thread::spawn( move || {
@@ -52,7 +52,7 @@ impl Aggregator{
     pub fn send(&self, packet: ParsedPacket){
         self.tx.send(packet).unwrap();
     }
-    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>> {
+    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String,usize),(String,usize,String,String)>>> {
         Arc::clone(&self.aggregated_data)
     }
     pub fn get_sender(&self) -> Sender<ParsedPacket> {

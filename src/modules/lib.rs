@@ -3,6 +3,8 @@ use std::{fs, io};
 use std::collections::HashMap;
 use std::io::{BufWriter, Write};
 use std::sync::{Arc, Mutex};
+use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::format::{DelayedFormat, StrftimeItems};
 use etherparse::{PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
@@ -53,7 +55,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut source=String::new();
     let mut destination=String::new();
     let mut size = 0;
-    let mut ts=0;
+    let mut ts=String::new();
     let mut trs_protocol =String::new();
     let mut src_port =0;
     let mut dest_port =0;
@@ -68,7 +70,11 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
                 d.pop();
                 destination=d;
                 size=packet.header.len as usize;
-                ts=packet.header.ts.tv_sec as usize;
+                let time_number=packet.header.ts.tv_sec as i64;
+                let nt = NaiveDateTime::from_timestamp(time_number, 0);
+                let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
+                ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
+
                 show.0=true;
             },
             _ => {}
@@ -130,14 +136,14 @@ pub fn create_dir_report(filename:&str) -> BufWriter<File> {
 
 }
 //, aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
-pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>){
+pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String, usize), (String, usize, String, String)>>>){
    let aggregated_data=aggregated_data.lock().unwrap();
 
     let mut output =create_dir_report(filename);
    // output.write_all(aggregated_data).unwrap();
-    writeln!(output, "-------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
-    writeln!(output, "|   Dst IP address   | Dst port |  Protocol  |   Bytes    |  Initial timestamp  |   Final timestamp   |").expect("Error writing output file\n\r");
-    writeln!(output, "-------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
+    writeln!(output, "----------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
+    writeln!(output, "|   Dst IP address  |  Dst port |  Protocol |    Bytes      |  Initial timestamp    |   Final timestamp  |").expect("Error writing output file\n\r");
+    writeln!(output, "----------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
 
     for x in aggregated_data.iter(){
         let key=x.0;
@@ -146,8 +152,8 @@ pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String,usi
         let k2=key.1;
         let val1=value.0.clone();
         let val2=value.1;
-        let val3=value.2;
-        let val4=value.3;
+        let val3=value.2.clone();
+        let val4=value.3.clone();
         writeln!(output, "| {0:<15} \t| {1:<5} \t| {2:<7} \t| {3:<9} \t| {4:<15} \t| {5:<3} ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
     }
 

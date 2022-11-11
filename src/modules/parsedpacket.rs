@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub struct ParsedPacket {
-    pub timestamp: usize,
+    pub timestamp: String,
     pub source_ip: String,
     pub destination_ip: String,
     pub source_port: usize,
@@ -11,7 +11,7 @@ pub struct ParsedPacket {
 
 impl ParsedPacket {
     pub fn new(
-        timestamp: usize,
+        timestamp: String,
         source_ip: String,
         destination_ip: String,
         source_port: usize,
