@@ -177,23 +177,32 @@ pub fn create_dir_report(filename:&str) -> BufWriter<File> {
 
 }
 //, aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
-pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String, usize), (String, usize, String, String)>>>){
+pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String, String, Option<usize>, Option<usize>, String),(usize,String,String)>>>){
    let aggregated_data=aggregated_data.lock().unwrap();
 
     let mut output =create_dir_report(filename);
-    writeln!(output, "|   Dst IP address  |  Dst port |  Protocol |    Bytes      |  Initial timestamp    |   Final timestamp  |").expect("Error writing output file\n\r");
-    writeln!(output, "| :---------------: | :-------: | :-------: | :-----------: | :-------------------: | :----------------: |").expect("Error writing output file\n\r");
+    writeln!(output, "|   Src IP address  |  Dst IP address   |  Src port |  Dst port |  Protocol |    Bytes      |  Initial timestamp    |   Final timestamp  |").expect("Error writing output file\n\r");
+    writeln!(output, "| :---------------: | :---------------: | :-------: | :-------: | :-------: | :-----------: | :-------------------: | :----------------: |").expect("Error writing output file\n\r");
 
-    for x in aggregated_data.iter(){
-        let key=x.0;
-        let value=x.1;
-        let k1=key.0.clone();
-        let k2=key.1;
-        let val1=value.0.clone();
-        let val2=value.1;
-        let val3=value.2.clone();
-        let val4=value.3.clone();
-        writeln!(output, "| {0:<15} \t| {1:<5} \t| {2:<7} \t| {3:<9} \t| {4:<15} \t| {5:<3}| ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
+    for entry in aggregated_data.iter(){
+        let key= entry.0;
+        let value= entry.1;
+        let ip_src= key.0.clone();
+        let ip_dst= key.1.clone();
+        let port_src = match key.2 {
+            Some(x) => x.to_string(),
+            None => String::from("-"),
+        };
+        let port_dst = match key.3 {
+            Some(x) => x.to_string(),
+            None => String::from("-"),
+        };
+        let protocol= key.4.clone();
+        let bytes= value.0;
+        let first_timestamp= value.1.clone();
+        let last_timestamp = value.2.clone();
+        //                  ip_src,     ip_dst,     port_src,   port_dst,  protocol,   bytes, first_timestamp,last_timestamp
+        writeln!(output, "| {0:<15} \t| {1:<15} \t| {2:<5} \t | {3:<5} \t| {4:<7} \t| {5:<9} \t| {6:<15} \t| {7:<3}| ",ip_src,ip_dst,port_src,port_dst,protocol,bytes,first_timestamp,last_timestamp).expect("Error writing output file\n\r");
     }
 
 
