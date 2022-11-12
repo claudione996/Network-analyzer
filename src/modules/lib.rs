@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::{fs, io};
 use std::collections::HashMap;
+use std::fmt::format;
 use std::io::{BufWriter, Write};
 use std::sync::{Arc, Mutex};
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -94,12 +95,14 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
         None => {}
     }
     match  ph.transport {
-        Some(x)=> match x {
-            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
-            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
-            _ => {}
-        },
-        _ => {}
+        Some(TransportHeader::Tcp(th))=> {trs_protocol=String::from("Tcp");src_port= th.source_port as usize;dest_port= th.destination_port as usize;show=true},
+        Some(TransportHeader::Udp(th)) => {trs_protocol=String::from("Udp");src_port= th.source_port as usize;dest_port= th.destination_port as usize;show=true},
+        Some(TransportHeader::Icmpv4(th)) => {trs_protocol=format!("ICMPv4: {:?}", th.icmp_type);src_port=0;dest_port=0; show=true},
+        Some(TransportHeader::Icmpv6(th)) => {trs_protocol=format!("ICMPv6 {:?}", th.icmp_type);src_port=0;dest_port=0; show=true;},
+        None => {//TODO: decide how to handle this case
+            println!("No transport header");
+            show=false;
+        }
     }
     if show
     {
