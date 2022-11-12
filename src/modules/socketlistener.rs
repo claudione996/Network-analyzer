@@ -26,7 +26,7 @@ impl SocketListener {
     self.parser.resume_iter_cap();
     }
 
-    pub fn get_aggregated_data(&self)->std::sync::Arc<std::sync::Mutex<std::collections::HashMap<(String, usize),(String, usize, String, String)>>>{
+    pub fn get_aggregated_data(&self)->std::sync::Arc<std::sync::Mutex<std::collections::HashMap<(String, String, Option<usize>, Option<usize>, String),(usize,String,String)>>>{
         self.aggregator.get_aggregated_data()
     }
 
