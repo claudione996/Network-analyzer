@@ -22,39 +22,27 @@ impl Parser{
 
         let a=Arc::new(Mutex::new(false));
         let stopped=a.clone();
-
         let cv=Arc::new(Condvar::new());
-
         let cv1=cv.clone();
 
         std::thread::spawn( move || {
-
-
             println!("Parser thread started");
-
             loop {
-
                     match cap.next_packet() {
                         Ok(packet) => {
-
                             let mut stopped =stopped.lock().unwrap();
                             println!("t1");
                             let stopped = cv.wait_while(stopped, |x| *x).unwrap();
                             println!("t2");
-
-                            if *stopped {println!("parser stopped");break}
-
-
+                            //if *stopped {println!("parser stopped");break}
                             let p=parse_packet(packet);
                             match p {
-                                None => {println!("Error parsing packet");},
+                                None => {println!("package not valid for parsing (not IP/TCP or IP/UDP)");},
                                 Some(x) => {aggregator_tx.send(x).unwrap();}
                             } },
-                        Err(_) => {break}
+                        Err(_) => {println!("Packet Error");break}
                     }
-
             }
-
         });
         Parser{stopped:a,cv:cv1}
     }
@@ -73,7 +61,5 @@ impl Parser{
         *stopped=false;
         self.cv.notify_one();
     }
-
-
 
 }

@@ -5,7 +5,7 @@ use std::io::{BufWriter, Write};
 use std::sync::{Arc, Mutex};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use chrono::format::{DelayedFormat, StrftimeItems};
-use etherparse::{PacketHeaders, TransportHeader};
+use etherparse::{IpHeader, PacketHeaders, TransportHeader};
 use etherparse::IpHeader::Version4;
 use pcap::{Active, Capture, Device, Packet};
 use crate::modules::aggregator::Aggregator;
@@ -59,10 +59,11 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut trs_protocol =String::new();
     let mut src_port =0;
     let mut dest_port =0;
-    let mut show=(false,false);
+    let mut show=(false);
     match ph.ip {
         Some(x)=> match x {
             Version4(h,_)=> {
+                println!("V4");
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
                 source=s;
@@ -74,22 +75,33 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
                 let nt = NaiveDateTime::from_timestamp(time_number, 0);
                 let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
-
-                show.0=true;
             },
-            _ => {}
+            IpHeader::Version6(h, _) => {
+                println!("IP VERSION 6");
+                let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+                s.pop();
+                source=s;
+                let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+                d.pop();
+                destination=d;
+                size=packet.header.len as usize;
+                let time_number=packet.header.ts.tv_sec as i64;
+                let nt = NaiveDateTime::from_timestamp(time_number, 0);
+                let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
+                ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
+                }
         },
         None => {}
     }
     match  ph.transport {
         Some(x)=> match x {
-            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show.1=true}
-            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show.1=true}
+            TransportHeader::Udp(y) => {trs_protocol=String::from("Udp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
+            TransportHeader::Tcp(y) => {trs_protocol=String::from("Tcp");src_port=y.source_port as usize;dest_port=y.destination_port as usize;show=true}
             _ => {}
         },
         _ => {}
     }
-    if show.0 && show.1
+    if show
     {
         let parsed_p= ParsedPacket::new(ts, source, destination, src_port, dest_port, trs_protocol, size);
         //println!("{:?}", parsed_p);
@@ -154,7 +166,7 @@ pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String, us
         let val2=value.1;
         let val3=value.2.clone();
         let val4=value.3.clone();
-        writeln!(output, "| {0:<15} \t| {1:<5} \t| {2:<7} \t| {3:<9} \t| {4:<15} \t| {5:<3} ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
+        writeln!(output, "| {0:<15} \t| {1:<5} \t| {2:<7} \t| {3:<9} \t| {4:<15} \t| {5:<3}| ",k1,k2,val1,val2,val3,val4).expect("Error writing output file\n\r");
     }
 
 
