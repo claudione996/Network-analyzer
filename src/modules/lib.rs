@@ -6,8 +6,9 @@ use std::io::{BufWriter, Write};
 use std::sync::{Arc, Mutex};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use chrono::format::{DelayedFormat, StrftimeItems};
-use etherparse::{IpHeader, PacketHeaders, TransportHeader};
-use etherparse::IpHeader::Version4;
+use etherparse::{Icmpv4Type, Icmpv6Type, IpHeader, PacketHeaders, TransportHeader};
+use etherparse::IpHeader::{Version4, Version6};
+use etherparse::TransportHeader::{Icmpv4, Icmpv6, Tcp, Udp};
 use pcap::{Active, Capture, Device, Packet};
 use crate::modules::aggregator::Aggregator;
 use crate::modules::parsedpacket::ParsedPacket;
@@ -56,52 +57,76 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut source=String::new();
     let mut destination=String::new();
     let mut size = 0;
-    let mut ts=String::new();
-    let mut trs_protocol =String::new();
-    let mut src_port =0;
-    let mut dest_port =0;
-    let mut show=(false);
+    let mut ts= String::new();
+    let mut trs_protocol = String::new();
+    let mut src_port = None;
+    let mut dest_port = None;
+    let mut show= true;
     match ph.ip {
-        Some(x)=> match x {
-            Version4(h,_)=> {
-                println!("V4");
-                let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
-                s.pop();
-                source=s;
-                let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
-                d.pop();
-                destination=d;
-                size=packet.header.len as usize;
-                let time_number=packet.header.ts.tv_sec as i64;
-                let nt = NaiveDateTime::from_timestamp(time_number, 0);
-                let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
-                ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
-            },
-            IpHeader::Version6(h, _) => {
-                println!("IP VERSION 6");
-                let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
-                s.pop();
-                source=s;
-                let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
-                d.pop();
-                destination=d;
-                size=packet.header.len as usize;
-                let time_number=packet.header.ts.tv_sec as i64;
-                let nt = NaiveDateTime::from_timestamp(time_number, 0);
-                let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
-                ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
-                }
+        Some(Version4(h, _)) =>{
+            println!("V4");
+            let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+            s.pop();
+            source=s;
+            let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+            d.pop();
+            destination=d;
+            size=packet.header.len as usize;
+            let time_number=packet.header.ts.tv_sec as i64;
+            let nt = NaiveDateTime::from_timestamp(time_number, 0);
+            let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
+            ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
         },
-        None => {}
+        Some(Version6(h, _)) => {
+            println!("IP VERSION 6");
+            let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+            s.pop();
+            source=s;
+            let mut d=h.destination.into_iter().map(|i| i.to_string() + ".").collect::<String>();
+            d.pop();
+            destination=d;
+            size=packet.header.len as usize;
+            let time_number=packet.header.ts.tv_sec as i64;
+            let nt = NaiveDateTime::from_timestamp(time_number, 0);
+            let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
+            ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
+        },
+        None => {//TODO: decide what to do with packets without IP header
+        }
     }
     match  ph.transport {
-        Some(TransportHeader::Tcp(th))=> {trs_protocol=String::from("Tcp");src_port= th.source_port as usize;dest_port= th.destination_port as usize;show=true},
-        Some(TransportHeader::Udp(th)) => {trs_protocol=String::from("Udp");src_port= th.source_port as usize;dest_port= th.destination_port as usize;show=true},
-        Some(TransportHeader::Icmpv4(th)) => {trs_protocol=format!("ICMPv4: {:?}", th.icmp_type);src_port=0;dest_port=0; show=true},
-        Some(TransportHeader::Icmpv6(th)) => {trs_protocol=format!("ICMPv6 {:?}", th.icmp_type);src_port=0;dest_port=0; show=true;},
+        Some(Tcp(th))=> {
+            trs_protocol = String::from("TCP");
+            src_port = Some(th.source_port as usize);
+            dest_port = Some(th.destination_port as usize);
+        },
+        Some(Udp(th)) => {
+            trs_protocol = String::from("UDP");
+            src_port = Some(th.source_port as usize);
+            dest_port = Some(th.destination_port as usize);
+        },
+        Some(Icmpv4(th)) => trs_protocol = match th.icmp_type {
+            Icmpv4Type::Unknown { .. } => String::from("ICMPv4: Type Unknown"),
+            Icmpv4Type::DestinationUnreachable(_) => String::from("ICMPv4: Destination Unreachable"),
+            Icmpv4Type::Redirect(_) => String::from("ICMPv4: Redirect"),
+            Icmpv4Type::TimeExceeded(_) => String::from("ICMPv4: Time Exceeded"),
+            Icmpv4Type::ParameterProblem(_) => String::from("ICMPv4: Parameter Problem"),
+            Icmpv4Type::TimestampRequest(_) => String::from("ICMPv4: Timestamp Request"),
+            Icmpv4Type::TimestampReply(_) => String::from("ICMPv4: Timestamp Reply"),
+            Icmpv4Type::EchoReply(_) => String::from("ICMPv4: Echo Reply"),
+            Icmpv4Type::EchoRequest(_) => String::from("ICMPv4: Echo Request"),
+        },
+        Some(Icmpv6(th)) => trs_protocol = match th.icmp_type {
+            Icmpv6Type::Unknown { .. } => String::from("ICMPv6: Type Unknown"),
+            Icmpv6Type::DestinationUnreachable(_) => String::from("ICMPv6: Destination Unreachable"),
+            Icmpv6Type::PacketTooBig { .. } => String::from("ICMPv6: Packet Too Big"),
+            Icmpv6Type::TimeExceeded(_) => String::from("ICMPv6: Time Exceeded"),
+            Icmpv6Type::ParameterProblem(_) => String::from("ICMPv6: Parameter Problem"),
+            Icmpv6Type::EchoRequest(_) => String::from("ICMPv6: Echo Request"),
+            Icmpv6Type::EchoReply(_) => String::from("ICMPv6: Echo Reply"),
+        },
         None => {//TODO: decide how to handle this case
-            println!("No transport header");
-            show=false;
+            show = false;
         }
     }
     if show
@@ -138,6 +163,7 @@ pub fn send_to_aggregator(mut cap:Capture<Active>){
 
 pub fn create_dir_report(filename:&str) -> BufWriter<File> {
     let res_dir=fs::create_dir("report");
+    //TODO: handle error or success
     match res_dir {
         Ok(_) => {}
         Err(_) => {}
@@ -155,8 +181,6 @@ pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<(String, us
    let aggregated_data=aggregated_data.lock().unwrap();
 
     let mut output =create_dir_report(filename);
-   // output.write_all(aggregated_data).unwrap();
-    //writeln!(output, "----------------------------------------------------------------------------------------------------------").expect("Error writing output file\n\r");
     writeln!(output, "|   Dst IP address  |  Dst port |  Protocol |    Bytes      |  Initial timestamp    |   Final timestamp  |").expect("Error writing output file\n\r");
     writeln!(output, "| :---------------: | :-------: | :-------: | :-----------: | :-------------------: | :----------------: |").expect("Error writing output file\n\r");
 
