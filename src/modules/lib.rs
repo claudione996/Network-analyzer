@@ -186,10 +186,6 @@ pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<Connection,
     writeln!(output, "| :---------------: | :---------------: | :-------: | :-------: | :-------: | :-----------: | :-------------------: | :----------------: |").expect("Error writing output file\n\r");
 
     for (conn,data) in aggregated_data.iter(){
-        //let key= entry.0;
-        //let value= entry.1;
-        let ip_src= conn.source_ip.clone();
-        let ip_dst= conn.destination_ip.clone();
         let port_src = match conn.source_port {
             Some(x) => x.to_string(),
             None => String::from("-"),
@@ -198,12 +194,9 @@ pub fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<Connection,
             Some(x) => x.to_string(),
             None => String::from("-"),
         };
-        let protocol= conn.protocol.clone();
         let bytes= data.size.to_string();
-        let first_timestamp= data.first_timestamp.clone();
-        let last_timestamp = data.last_timestamp.clone();
         //                  ip_src,     ip_dst,     port_src,   port_dst,  protocol,   bytes, first_timestamp,last_timestamp
-        writeln!(output, "| {0:<15} \t| {1:<15} \t| {2:<5} \t | {3:<5} \t| {4:<7} \t| {5:<9} \t| {6:<15} \t| {7:<3}| ",ip_src,ip_dst,port_src,port_dst,protocol,bytes,first_timestamp,last_timestamp).expect("Error writing output file\n\r");
+        writeln!(output, "| {0:<15} \t| {1:<15} \t| {2:<5} \t | {3:<5} \t| {4:<7} \t| {5:<9} \t| {6:<15} \t| {7:<3}| ",conn.source_ip,conn.destination_ip,port_src,port_dst,conn.protocol,bytes,data.first_timestamp,data.last_timestamp).expect("Error writing output file\n\r");
     }
 
 
