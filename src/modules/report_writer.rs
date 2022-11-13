@@ -5,6 +5,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Sender};
 use crate::modules::lib::write_report;
 use crate::modules::parsedpacket::ParsedPacket;
+use crate::modules::report_entry::{Connection, ConnectionMetadata};
 
 #[derive(PartialEq,Debug)]
 enum Command {
@@ -17,13 +18,13 @@ enum Command {
 pub struct ReportWriter{
     report_path: Arc<Mutex<String>>,
     rewrite_time: Arc<Mutex<u64>>,
-    aggregated_data: Arc<Mutex<HashMap<(String, String, Option<usize>, Option<usize>, String),(usize,String,String)>>>,
+    aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>,
     cmd: Arc<Mutex<Command>>,
     cv_cmd: Arc<Condvar>
 }
 
 impl ReportWriter {
-    pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<(String, String, Option<usize>, Option<usize>, String),(usize,String,String)>>>) -> Self {
+    pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) -> Self {
         //generate all the Arcs
         let report_path = Arc::new(Mutex::new(report_path));
         let rwr_time = Arc::new(Mutex::new(rewrite_time));
@@ -100,7 +101,7 @@ impl ReportWriter {
         *rwr_time
     }
 
-    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<(String, String, Option<usize>, Option<usize>, String),(usize,String,String)>>> {
+    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<Connection, ConnectionMetadata>>> {
         Arc::clone(&self.aggregated_data)
     }
 
