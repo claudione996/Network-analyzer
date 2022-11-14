@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::num::ParseIntError;
 use std::{fs, io};
 use std::collections::HashMap;
 use std::fmt::format;
@@ -31,26 +32,39 @@ pub fn select_default() -> Capture<Active> {
     return cap;
 }
 
-pub fn select_device() -> Capture<Active> {
-    let mut i=0;
+pub fn select_device() -> String {
     // list all of the devices pcap tells us are available
     let dev_list= Device::list().expect("device lookup failed");
-    for device in &dev_list {
-        i+=1;
-        println!("{})  {:?}",i, device.desc.as_ref().unwrap());
+    let mut number:usize = 0;
+    loop{
+        let mut i=0;
+        for device in &dev_list {
+            i+=1;
+            println!("{})  {:?}",i, device.desc.as_ref().unwrap());
+        }
+        let mut input_line = String::new();
+        io::stdin()
+            .read_line(&mut input_line)
+            .expect("Failed to read line");
+        let number_res:Result<usize, ParseIntError> = input_line.trim().parse();
+        match number_res{
+            Ok(x) => {
+                            if(x > 0 && x <= i){
+                                number = x-1; 
+                                break;
+                            }
+                            else{
+                                println!("Device number must be in the interval");
+                            }},
+            Err(_) => {println!("Device must be a number")}
+        }
+
     }
-    let mut input_line = String::new();
-    io::stdin()
-        .read_line(&mut input_line)
-        .expect("Failed to read line");
-    let mut number: usize = input_line.trim().parse().expect("Input not an integer");
-    number-=1;
+
     let device = dev_list[number].clone();
+    let device_name = device.name;
     println!("Selected {:?}",device.desc.as_ref().unwrap());
-    let cap = Capture::from_device(device).unwrap()
-        .promisc(true)
-        .open().unwrap();
-    return cap;
+    return device_name;
 }
 
 pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
@@ -172,6 +186,7 @@ pub fn create_dir_report(filename:&str) -> BufWriter<File> {
     let mut path =String::from("report/");
     path.push_str(filename);
     path.push_str(".txt");
+    println!("{path}");
     let input=File::create(path.as_str()).expect("Error creating output file\n\r");
     let output = BufWriter::new(input);
     return output;
