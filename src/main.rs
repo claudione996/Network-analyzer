@@ -9,12 +9,11 @@ fn main() {
     //scheda di claudione: "en0"
     //scheda di paolo: "\\Device\\NPF_{CA1DFCEA-2C68-4269-9347-4B04CB3E6420}"
 
-    println!("Select which device you want to sniff:");
+    println!("Select the device to sniff:");
     let device_name = select_device();
-
     
-    println!("Select the report time interval:");
-    let mut time: usize = 0;
+    println!("\nSelect the report time interval:");
+    let time: usize;
     loop{
         let mut input_line = String::new();
         io::stdin()
@@ -24,16 +23,18 @@ fn main() {
         match time_res{
             Ok(x) => {time = x; 
                             break;},
-            Err(_) => {println!("Time interval must be a number")}
+            Err(_) => {println!("Time interval must be a number. Please insert again")}
         }
     }
+    println!("Time interval selected: {time}");
 
-    println!("Choose the name of the file where the report will be saved:");
+    println!("\nChoose the name of the file where you want the report to be saved:");
     let mut name_input = String::new();
     io::stdin()
             .read_line(&mut name_input)
             .expect("Failed to read line");
     let name_input = name_input.trim();
+    println!("Report will be saved in report/{name_input}.txt\n");
 
     let a=Analyzer::new(&device_name, name_input, time as u64);
 
@@ -43,7 +44,7 @@ fn main() {
         io::stdin()
             .read_line(&mut input_line)
             .expect("Failed to read line");
-        let mut number: usize = input_line.trim().parse().expect("Input not an integer");
+        let number: usize = input_line.trim().parse().expect("Input not an integer");
 
         match number{
             1 => a.pause(),

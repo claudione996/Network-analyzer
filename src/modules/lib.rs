@@ -35,7 +35,7 @@ pub fn select_default() -> Capture<Active> {
 pub fn select_device() -> String {
     // list all of the devices pcap tells us are available
     let dev_list= Device::list().expect("device lookup failed");
-    let mut number:usize = 0;
+    let number:usize;
     loop{
         let mut i=0;
         for device in &dev_list {
@@ -49,7 +49,7 @@ pub fn select_device() -> String {
         let number_res:Result<usize, ParseIntError> = input_line.trim().parse();
         match number_res{
             Ok(x) => {
-                            if(x > 0 && x <= i){
+                            if x > 0 && x <= i {
                                 number = x-1; 
                                 break;
                             }
@@ -63,7 +63,7 @@ pub fn select_device() -> String {
 
     let device = dev_list[number].clone();
     let device_name = device.name;
-    println!("Selected {:?}",device.desc.as_ref().unwrap());
+    println!("Device selected: {:?}",device.desc.as_ref().unwrap());
     return device_name;
 }
 
