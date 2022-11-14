@@ -60,7 +60,7 @@ pub fn select_device() -> String {
                 else{
                     println!("Device number must be in the interval 1-{i} \nSelect a correct device to sniff:");
                 }},
-            Err(_) => {println!("Device must be a number")}
+            Err(_) => {println!("Device must be a number! \nSelect device in the interval 1-{i}")}
         }
 
     }
@@ -87,7 +87,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
     let mut show= true;
     match ph.ip {
         Some(Version4(h, _)) =>{
-            println!("V4");
+            //println!("V4");
             let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
             s.pop();
             source=s;
@@ -101,7 +101,7 @@ pub fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
             ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
         },
         Some(Version6(h, _)) => {
-            println!("IP VERSION 6");
+            //println!("IP VERSION 6");
             let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
             s.pop();
             source=s;

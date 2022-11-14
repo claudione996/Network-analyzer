@@ -12,7 +12,7 @@ fn main() {
     println!("Select the device to sniff:");
     let device_name = select_device();
     
-    println!("\nSelect the report time interval:");
+    println!("\nSelect the report time interval (s):");
     let time: usize;
     loop{
         let mut input_line = String::new();
@@ -23,10 +23,10 @@ fn main() {
         match time_res{
             Ok(x) => {time = x; 
                             break;},
-            Err(_) => {println!("Time interval must be a number. Please insert again")}
+            Err(_) => {println!("Time interval must be a number. Please insert again:")}
         }
     }
-    println!("Time interval selected: {time}");
+    println!("Time interval selected: {time} s");
 
     println!("\nChoose the name of the file where you want the report to be saved:");
     let mut name_input = String::new();

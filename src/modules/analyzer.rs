@@ -13,7 +13,7 @@ impl Analyzer{
         let report_writer = ReportWriter::new(filename.to_string(), timer, sl.get_aggregated_data());
         Analyzer{sl,report_writer}
     }
-
+/*
     pub fn choice_loop(&self){
         loop {
         println!("select 1 or 2");
@@ -24,16 +24,22 @@ impl Analyzer{
         let mut number: usize = input_line.trim().parse().expect("Input not an integer");
 
         match number{
-            1 => {println!("choice 1: pausing SocketListener and report writer"); self.sl.pause(); self.report_writer.pause();},
-            2 => {println!("choice 2: resuming SocketListener and report writer"); self.sl.resume(); self.report_writer.resume();}
+            1 => {/*println!("choice 1: pausing SocketListener and report writer");*/
+                println!("PAUSE");
+                self.sl.pause(); self.report_writer.pause();},
+            2 => {/*println!("choice 2: resuming SocketListener and report writer");*/
+                println!("RESUME");
+                self.sl.resume(); self.report_writer.resume();}
             _ => {println!("invalid input: select either 1 (to pause) or 2 (to resume)");},
+
+
         }
 
         }
         //std::thread::sleep(std::time::Duration::from_secs(10));
 
     }
-
+*/
     pub fn pause(&self){
         println!("choice 1: pausing SocketListener and report writer");
         self.sl.pause();
