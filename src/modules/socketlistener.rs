@@ -1,6 +1,7 @@
 use crate::modules::aggregator::Aggregator;
 use crate::modules::lib::write_report;
 use crate::modules::parser::Parser;
+use crate::modules::report_entry::{Connection, ConnectionMetadata};
 
 pub struct SocketListener{
     parser: Parser,
@@ -26,7 +27,7 @@ impl SocketListener {
     self.parser.resume_iter_cap();
     }
 
-    pub fn get_aggregated_data(&self)->std::sync::Arc<std::sync::Mutex<std::collections::HashMap<(String, usize),(String, usize, String, String)>>>{
+    pub fn get_aggregated_data(&self)->std::sync::Arc<std::sync::Mutex<std::collections::HashMap<Connection,ConnectionMetadata>>>{
         self.aggregator.get_aggregated_data()
     }
 

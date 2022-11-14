@@ -37,10 +37,10 @@ impl Parser{
                             //if *stopped {println!("parser stopped");break}
                             let p=parse_packet(packet);
                             match p {
-                                None => {println!("package not valid for parsing (not IP/TCP or IP/UDP)");},
-                                Some(x) => {aggregator_tx.send(x).unwrap();}
+                                None => println!("packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)"),
+                                Some(x) => aggregator_tx.send(x).unwrap(),
                             } },
-                        Err(_) => {println!("Packet Error");break}
+                        Err(_) => {println!("Packet Error"); break }
                     }
             }
         });
