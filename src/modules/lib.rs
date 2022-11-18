@@ -193,7 +193,7 @@ pub fn create_dir_report(filename:&str) -> BufWriter<File> {
     }
     let mut path =String::from("report/");
     path.push_str(filename);
-    path.push_str(".txt");
+    path.push_str(".md");
     println!("{path}");
     let input=File::create(path.as_str()).expect("Error creating output file\n\r");
     let output = BufWriter::new(input);
