@@ -31,9 +31,9 @@ impl Parser{
                     match cap.next_packet() {
                         Ok(packet) => {
                             let mut stopped =stopped.lock().unwrap();
-                            println!("t1");
+                           // println!("t1");
                             let stopped = cv.wait_while(stopped, |x| *x).unwrap();
-                            println!("t2");
+                           // println!("t2");
                             //if *stopped {println!("parser stopped");break}
                             let p=parse_packet(packet);
                             match p {
@@ -48,16 +48,16 @@ impl Parser{
     }
 
     pub fn stop_iter_cap(&self){
-        println!("stop1");
+      //  println!("stop1");
         let mut stopped =self.stopped.lock().unwrap();
-        println!("stop2");
+      //  println!("stop2");
         *stopped=true;
     }
 
     pub fn resume_iter_cap(&self){
-        println!("resume1");
+     //   println!("resume1");
         let mut stopped =self.stopped.lock().unwrap();
-        println!("resume2");
+     //   println!("resume2");
         *stopped=false;
         self.cv.notify_one();
     }
