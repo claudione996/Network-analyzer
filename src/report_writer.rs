@@ -1,11 +1,13 @@
 use std::collections::HashMap;
+use std::fs;
+use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::mem::needs_drop;
 use std::os::raw::c_float;
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Sender};
-use crate::modules::lib::write_report;
-use crate::modules::parsedpacket::ParsedPacket;
-use crate::modules::report_entry::{Connection, ConnectionMetadata};
+use crate::parsed_packet::ParsedPacket;
+use crate::report_entry::{Connection, ConnectionMetadata};
 
 #[derive(PartialEq,Debug)]
 enum Command {
@@ -63,7 +65,7 @@ impl ReportWriter {
                         if *cmd == Command::PROCEED{
                             println!("ReportWriter thread awake, writing report");
                             let report_path = report_path_clone.lock().unwrap();
-                            write_report((*report_path).as_str(), aggregated_data_clone.clone());
+                            ReportWriter::write_report((*report_path).as_str(), aggregated_data_clone.clone());
                         }
                         else { println!("Report Writer received command: {:?} while sleeping so the report will not be written",*cmd); }
                     }
@@ -113,6 +115,46 @@ impl ReportWriter {
     pub fn get_report_path(&self) -> String {
         let report_path = self.report_path.lock().unwrap();
         (*report_path).clone()
+    }
+
+    //, aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
+    fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) {
+        let aggregated_data = aggregated_data.lock().unwrap();
+
+        let mut output = ReportWriter::create_dir_report(filename);
+        writeln!(output, "|   Src IP address  |  Dst IP address   |  Src port |  Dst port |  Protocol |    Bytes      |  Initial timestamp    |   Final timestamp  |").expect("Error writing output file\n\r");
+        writeln!(output, "| :---------------: | :---------------: | :-------: | :-------: | :-------: | :-----------: | :-------------------: | :----------------: |").expect("Error writing output file\n\r");
+
+        for (conn, data) in aggregated_data.iter() {
+            let port_src = match conn.source_port {
+                Some(x) => x.to_string(),
+                None => String::from("-"),
+            };
+            let port_dst = match conn.destination_port {
+                Some(x) => x.to_string(),
+                None => String::from("-"),
+            };
+            let bytes = data.size.to_string();
+            //                  ip_src,     ip_dst,     port_src,   port_dst,  protocol,   bytes, first_timestamp,last_timestamp
+            writeln!(output, "| {0:<15} \t| {1:<15} \t| {2:<5} \t | {3:<5} \t| {4:<7} \t| {5:<9} \t| {6:<15} \t| {7:<3}| ", conn.source_ip, conn.destination_ip, port_src, port_dst, conn.protocol, bytes, data.first_timestamp, data.last_timestamp).expect("Error writing output file\n\r");
+        }
+    }
+
+    pub fn create_dir_report(filename:&str) -> BufWriter<File> {
+        let res_dir=fs::create_dir("report");
+        //TODO: handle error or success
+        match res_dir {
+            Ok(_) => {}
+            Err(_) => {}
+        }
+        let mut path =String::from("report/");
+        path.push_str(filename);
+        path.push_str(".md");
+        println!("{path}");
+        let input=File::create(path.as_str()).expect("Error creating output file\n\r");
+        let output = BufWriter::new(input);
+        return output;
+
     }
 
 }

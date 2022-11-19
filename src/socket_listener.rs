@@ -1,7 +1,6 @@
-use crate::modules::aggregator::Aggregator;
-use crate::modules::lib::write_report;
-use crate::modules::parser::Parser;
-use crate::modules::report_entry::{Connection, ConnectionMetadata};
+use crate::aggregator::Aggregator;
+use crate::parser::Parser;
+use crate::report_entry::{Connection, ConnectionMetadata};
 
 pub struct SocketListener{
     parser: Parser,

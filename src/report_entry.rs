@@ -1,4 +1,3 @@
-
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Connection {
     pub source_ip: String,

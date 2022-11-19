@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Sender};
-use crate::modules::parsedpacket::ParsedPacket;
-use crate::modules::report_entry::{Connection, ConnectionMetadata};
+use crate::parsed_packet::ParsedPacket;
+use crate::report_entry::{Connection, ConnectionMetadata};
 
 
 /// aggregated data entry structure: {Key: (src_ip, dest_ip, src_port, dest_port, protocol), Value: (size, first_timestamp, last_timestamp)}

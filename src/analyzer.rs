@@ -1,6 +1,6 @@
 use std::io;
-use crate::modules::report_writer::ReportWriter;
-use crate::modules::socketlistener::SocketListener;
+use crate::report_writer::ReportWriter;
+use crate::socket_listener::SocketListener;
 
 pub struct Analyzer{
     pub sl: SocketListener,
