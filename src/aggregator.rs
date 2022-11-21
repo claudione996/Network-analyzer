@@ -5,25 +5,82 @@ use crate::parsed_packet::ParsedPacket;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
 
-/// aggregated data entry structure: {Key: (src_ip, dest_ip, src_port, dest_port, protocol), Value: (size, first_timestamp, last_timestamp)}
+/// Struct that aggregates data from received [ParsedPacket] into an HashMap which has as a key: [Connection] and as a value: [ConnectionMetadata]
+///
+/// # Examples
+/// Basic usage:
+/// ```rust
+/// use Network_analyzer::aggregator::Aggregator;
+/// use Network_analyzer::parser::Parser;
+///
+/// let aggregator=Aggregator::new();
+///
+/// let aggregator_tx=aggregator.get_sender();
+///
+/// let parser=Parser::new("eth0", aggregator_tx.clone());
+/// ```
+///
+/// Advanced usage: create multiple aggregators for multiple parsers listening on different devices
+/// ```rust
+/// use Network_analyzer::aggregator::Aggregator;
+/// use Network_analyzer::parser::Parser;
+///
+/// let aggregator_one=Aggregator::new();
+///
+/// let aggregator_tx_one=aggregator_one.get_sender();
+///
+/// let parser_one=Parser::new("eth0", aggregator_tx_one.clone());
+///
+///
+/// let aggregator_two=Aggregator::new();
+///
+/// let aggregator_tx_two=aggregator_two.get_sender();
+///
+/// let parser_two=Parser::new("eth1", aggregator_tx_two.clone());
+///
+/// ```
+///
+/// # Panics
+/// TODO: add panic description
+///
+/// # Errors
+/// TODO: add error description
+///
+/// # Remarks
+/// TODO: add remarks description
 #[derive(Clone)]
 pub struct Aggregator{
     tx: Sender<ParsedPacket>,
     aggregated_data: Arc<Mutex<HashMap<Connection,ConnectionMetadata>>>
 }
 impl Aggregator{
+    ///Creates the [Aggregator] and a thread that receives [ParsedPacket] via channel and inserts them into the [Aggregator] map
+    ///
+    /// # Examples
+    /// Basic usage:
+    /// ```rust
+    /// use Network_analyzer::aggregator::Aggregator;
+    /// use Network_analyzer::parser::Parser;
+    ///
+    /// let aggregator=Aggregator::new();
+    /// ```
+    ///
+    /// # Panics
+    /// TODO: add panic description
+    ///
+    /// # Errors
+    /// TODO: add error description
+    ///
+    /// # Remarks
+    /// TODO: add remarks description
     pub fn new() -> Self {
-
         let(tx,rx) = channel::<ParsedPacket>();
-
         //declare an hashmap with key as tuple of (destination_ip,port) and value as tuple of (protocol, size, first_timestamp, last_timestamp)
         let mut aggregated_data = Arc::new(Mutex::new(HashMap::<Connection,ConnectionMetadata>::new()));
         let mut aggregated_data_clone = Arc::clone(&aggregated_data);
 
         std::thread::spawn( move || {
-
             println!("Aggregator thread started");
-
             let mut loop1 = true;
             while loop1 {
                 let msg = rx.recv();
@@ -56,12 +113,18 @@ impl Aggregator{
         });
         Aggregator { tx, aggregated_data }
     }
+
+    ///allows a [ParsedPacket] to be sent to the aggregator via the [Aggregator] sender
     pub fn send(&self, packet: ParsedPacket){
         self.tx.send(packet).unwrap();
     }
+
+    ///Returns aggregated data from the [Aggregator]
     pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<Connection,ConnectionMetadata>>> {
         Arc::clone(&self.aggregated_data)
     }
+
+    ///Returns the [Aggregator] sender to allow it to send [ParsedPacket]
     pub fn get_sender(&self) -> Sender<ParsedPacket> {
         self.tx.clone()
     }

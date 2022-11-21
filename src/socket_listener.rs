@@ -4,7 +4,7 @@ use crate::aggregator::Aggregator;
 use crate::parser::Parser;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
-/// Struct that contains a [Parser] and an [Aggregator] and allows packets to be sent from the parser to the aggregator
+/// Struct that contains a [Parser] and an [Aggregator] and allows packets to be sent from the [Parser] to the [Aggregator]
 ///
 /// # Examples
 /// Basic usage:
@@ -27,7 +27,7 @@ pub struct SocketListener{
 }
 
 impl SocketListener {
-    /// Creates a SocketListener by creating and connecting an Aggregator and a Parser
+    /// Creates a [SocketListener] by creating and connecting an [Aggregator] and a [Parser]
     /// # Arguments
     /// * `device_str` - The name of device to listen to
     /// # Example
@@ -47,22 +47,22 @@ impl SocketListener {
         SocketListener{parser,aggregator,device}
     }
 
-    /// Pauses the parser of SocketListener from receiving packets if it is not already paused
+    /// Pauses the [Parser] of [SocketListener] from receiving packets if it is not already paused
     pub fn pause(&self){
     self.parser.stop_iter_cap();
     }
 
-    /// Resumes the parser of SocketListener from receiving packets if it was paused, otherwise does nothing
+    /// Resumes the [Parser] of [SocketListener] from receiving packets if it was paused, otherwise does nothing
     pub fn resume(&self){
     self.parser.resume_iter_cap();
     }
 
-    /// Interrupts the loop of the parser thread, allowing the thread to end
+    /// Interrupts the loop of the [Parser] thread, allowing the thread to end
     pub fn exit(&self){
         self.parser.exit_iter_cap();
     }
 
-    /// Returns aggregated data from the Aggregator of SocketListener
+    /// Returns aggregated data from the [Aggregator] of [SocketListener]
     pub fn get_aggregated_data(&self)-> Arc<Mutex<HashMap<Connection,ConnectionMetadata>>>{
         self.aggregator.get_aggregated_data()
     }
