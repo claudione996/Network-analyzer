@@ -4,7 +4,7 @@ use crate::aggregator::Aggregator;
 use crate::parser::Parser;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
-/// Struct that creates and associates a [Parser], starting from device, with an [Aggregator]
+/// Struct that contains a [Parser] and an [Aggregator] and allows packets to be sent from the parser to the aggregator
 ///
 /// # Examples
 /// Basic usage:
