@@ -55,7 +55,7 @@ enum Command {
 /// TODO: add error description
 ///
 /// # Remarks
-/// Each parser runs in a separate thread, so you can create multiple parsers listening to multiple devices
+/// Each parser runs in a separate thread, so you can create multiple parsers listening to multiple devices simultaneously
 pub struct Parser{
     cmd:Arc<Mutex<Command>>,
     cv:Arc<Condvar>

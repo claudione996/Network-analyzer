@@ -41,13 +41,13 @@ use crate::report_entry::{Connection, ConnectionMetadata};
 /// ```
 ///
 /// # Panics
-/// TODO: add panic description
+/// If the insertion of the packet into the channel within the send method, goes wrong
 ///
 /// # Errors
-/// TODO: add error description
+/// if the result taken from the channel does not return an Ok<[ParsedPacket]>.
 ///
 /// # Remarks
-/// TODO: add remarks description
+/// Each [Aggregator] runs in a separate thread, so you can create multiple [Parser] sending [ParsedPacket] to multiple [Aggregator]
 #[derive(Clone)]
 pub struct Aggregator{
     tx: Sender<ParsedPacket>,
@@ -64,15 +64,8 @@ impl Aggregator{
     ///
     /// let aggregator=Aggregator::new();
     /// ```
-    ///
-    /// # Panics
-    /// TODO: add panic description
-    ///
-    /// # Errors
-    /// TODO: add error description
-    ///
-    /// # Remarks
-    /// TODO: add remarks description
+    ///# Errors
+    /// if the result taken from the channel does not return an Ok<[ParsedPacket]>.
     pub fn new() -> Self {
         let(tx,rx) = channel::<ParsedPacket>();
         //declare an hashmap with key as tuple of (destination_ip,port) and value as tuple of (protocol, size, first_timestamp, last_timestamp)
