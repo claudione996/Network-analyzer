@@ -27,9 +27,7 @@ impl Analyzer{
     }
 
     pub fn exit(&self){
-        //TODO: implement exit also for SocketListener and its submodules (parser and aggregator)
-        // such that they can be stopped gracefully (thread exits from the loop)
-        self.sl.pause();
+        self.sl.exit();
         self.report_writer.exit();
     }
 }

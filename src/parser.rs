@@ -7,6 +7,13 @@ use etherparse::TransportHeader::{Icmpv4, Icmpv6, Tcp, Udp};
 use pcap::{Capture, Packet};
 use crate::parsed_packet::ParsedPacket;
 
+#[derive(PartialEq,Debug)]
+enum Command {
+    PROCEED,
+    PAUSE,
+    EXIT
+}
+
 /// Struct that parses pcap Packets into [ParsedPacket] from a network device and sends them through another channel
 ///
 /// # Examples
@@ -51,7 +58,7 @@ use crate::parsed_packet::ParsedPacket;
 /// Each parser runs in a separate thread, so you can create multiple parsers listening to multiple devices
 ///
 pub struct Parser{
-    stopped:Arc<Mutex<bool>>,
+    cmd:Arc<Mutex<Command>>,
     cv:Arc<Condvar>
 }
 impl Parser{
@@ -80,41 +87,59 @@ impl Parser{
             .promisc(true)
             .open().expect("Failed to open device");
 
-        let a=Arc::new(Mutex::new(false));
-        let stopped=a.clone();
+        let a=Arc::new(Mutex::new(Command::PROCEED));
+        let cmd=a.clone();
         let cv=Arc::new(Condvar::new());
         let cv1=cv.clone();
 
-        // TODO: add a way to stop the thread (not only pausing it). Maybe a channel that sends a message to the thread to stop it like in the report_writer
         std::thread::spawn( move || {
             println!("Parser thread started");
             loop {
-                    match cap.next_packet() {
-                        Ok(packet) => {
-                            let mut stopped =stopped.lock().unwrap();
-                            let stopped = cv.wait_while(stopped, |x| *x).unwrap();
-                            let p= Parser::parse_packet(packet);
-                            match p {
-                                None => println!("packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)"),
-                                Some(x) => aggregator_tx.send(x).unwrap(),
-                            } },
-                        Err(_) => {println!("Packet Error"); break }
-                    }
+                match cap.next_packet() {
+                    Ok(packet) => {
+
+                        let mut cmd = cmd.lock().unwrap();
+                        match *cmd {
+                            Command::EXIT => {
+                                println!("ReportWriter thread exiting");
+                                break;
+                            },
+                            Command::PAUSE => {
+                                let cmd = cv.wait_while(cmd, |cmd| *cmd == Command::PAUSE).unwrap();
+                            },
+                            Command::PROCEED => {
+                                let p=Self::parse_packet(packet);
+                                match p {
+                                    None => println!("packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)"),
+                                    Some(x) => aggregator_tx.send(x).unwrap(),
+                                }
+                            }
+                        }
+                    },
+                    Err(_) => {println!("Packet Error"); break }
+                }
             }
         });
-        Parser{stopped:a,cv:cv1}
+
+        Parser{cmd:a,cv:cv1}
     }
 
     /// Pauses the parser from receiving packets if it is not already paused
     pub fn stop_iter_cap(&self){
-        let mut stopped =self.stopped.lock().unwrap();
-        *stopped=true;
+        let mut cmd =self.cmd.lock().unwrap();
+        *cmd=Command::PAUSE;
     }
 
     /// Resumes the parser from receiving packets if it was paused, otherwise does nothing
     pub fn resume_iter_cap(&self){
-        let mut stopped =self.stopped.lock().unwrap();
-        *stopped=false;
+        let mut cmd =self.cmd.lock().unwrap();
+        *cmd=Command::PROCEED;
+        self.cv.notify_one();
+    }
+
+    pub fn exit_iter_cap(&self){
+        let mut cmd =self.cmd.lock().unwrap();
+        *cmd=Command::EXIT;
         self.cv.notify_one();
     }
 
@@ -205,4 +230,11 @@ impl Parser{
         None
     }
 
+}
+
+impl Drop for Parser{
+    fn drop(&mut self) {
+        println!("exitParser");
+        self.exit_iter_cap();
+    }
 }

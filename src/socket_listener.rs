@@ -26,6 +26,10 @@ impl SocketListener {
     self.parser.resume_iter_cap();
     }
 
+    pub fn exit(&self){
+        self.parser.exit_iter_cap();
+    }
+
     pub fn get_aggregated_data(&self)->std::sync::Arc<std::sync::Mutex<std::collections::HashMap<Connection,ConnectionMetadata>>>{
         self.aggregator.get_aggregated_data()
     }
