@@ -62,9 +62,9 @@ pub fn select_device() -> String {
 
     let device = dev_list[number].clone();
     match device.desc.as_ref(){
-        None => {    println!("Device selected: {:?}",device.name);
+        None => {println!("Device selected: {:?}",device.name);
         }
-        Some(x) => {    println!("Device selected: {:?}",x);
+        Some(x) => {println!("Device selected: {:?}",x);
         }
     }
     return device.name;

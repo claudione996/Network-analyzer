@@ -21,12 +21,12 @@ enum Command {
 /// ```rust
 /// use std::sync::mpsc::{channel, Sender};
 /// use Network_analyzer::parser::Parser;
-/// // i am creating a channel where the parser will send the parsed packets
+/// // I am creating a channel where the parser will send the parsed packets
 /// let (tx, rx) = channel();
-/// // i create a new parser listening to device "eth0" and sending the parsed packets to the channel i just created
+/// // I create a new parser listening to device "eth0" and sending the parsed packets to the channel i just created
 /// let parser = Parser::new("eth0", tx); ///
-/// // now i can use rx to receive the parsed packets from all the parsers
-/// // notice that the parser is running in a separate thread, so i can wait for the packets in the main thread
+/// /* Now I can use rx to receive the parsed packets from all the parsers
+///  notice that the parser is running in a separate thread, so i can wait for the packets in the main thread */
 /// while let Ok(parsed_packet) = rx.recv() {
 ///    println!("Received packet: {:?}", parsed_packet);
 /// }
@@ -36,13 +36,13 @@ enum Command {
 /// ```rust
 /// use std::sync::mpsc::{channel, Sender};
 /// use Network_analyzer::parser::Parser;
-/// // i am creating a channel where the parser will send the parsed packets
+/// // I am creating a channel where the parser will send the parsed packets
 /// let (tx, rx) = channel();
-/// // i create a new parser listening to device "eth0" and sending the parsed packets to the channel i just created
+/// // I create a new parser listening to device "eth0" and sending the parsed packets to the channel i just created
 /// let parser1 = Parser::new("eth0", tx.clone());
 /// let parser2 = Parser::new("eth1", tx.clone());
 ///
-/// // now i can use rx to receive the parsed packets from all the parsers
+/// // Now I can use rx to receive the parsed packets from all the parsers
 /// while let Ok(parsed_packet) = rx.recv() {
 ///    println!("Received packet: {:?}", parsed_packet);
 /// }
@@ -56,7 +56,6 @@ enum Command {
 ///
 /// # Remarks
 /// Each parser runs in a separate thread, so you can create multiple parsers listening to multiple devices
-///
 pub struct Parser{
     cmd:Arc<Mutex<Command>>,
     cv:Arc<Condvar>
@@ -71,9 +70,9 @@ impl Parser{
     /// ```rust
     /// use std::sync::mpsc::{channel, Sender};
     /// use Network_analyzer::parser::Parser;
-    /// // i am creating a channel where the parser will send the parsed packets
+    /// // I am creating a channel where the parser will send the parsed packets
     /// let (tx, rx) = channel();
-    /// // i create a new parser listening to device "eth0" and sending the parsed packets to the channel i just created
+    /// // I am creating a new parser listening to device "eth0" and sending the parsed packets to the channel I just created
     /// let parser = Parser::new("eth0", tx);
     /// ```
     /// # Panics
@@ -137,6 +136,7 @@ impl Parser{
         self.cv.notify_one();
     }
 
+    /// Interrupts the loop of the parser thread, allowing the thread to end
     pub fn exit_iter_cap(&self){
         let mut cmd =self.cmd.lock().unwrap();
         *cmd=Command::EXIT;
