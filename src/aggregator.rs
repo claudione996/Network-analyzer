@@ -107,7 +107,7 @@ impl Aggregator{
         Aggregator { tx, aggregated_data }
     }
 
-    ///allows a [ParsedPacket] to be sent to the aggregator via the [Aggregator] sender
+    ///Allows a [ParsedPacket] to be sent to the aggregator via the [Aggregator] sender
     pub fn send(&self, packet: ParsedPacket){
         self.tx.send(packet).unwrap();
     }

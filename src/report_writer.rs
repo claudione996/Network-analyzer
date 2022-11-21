@@ -9,6 +9,7 @@ use std::sync::mpsc::{channel, Sender};
 use crate::parsed_packet::ParsedPacket;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
+///enum to indicate the state to be assumed by the writing thread
 #[derive(PartialEq,Debug)]
 enum Command {
     PROCEED,
@@ -16,6 +17,34 @@ enum Command {
     EXIT
 }
 
+/// Struct for managing the writing of aggregated data to files
+///
+/// # Examples
+/// Basic usage:
+/// ```rust
+/// use Network_analyzer::report_writer::ReportWriter;
+/// use Network_analyzer::socket_listener::SocketListener;
+///
+/// let sl=SocketListener::new(device);
+/// let name_input = String::from("file.txt");
+/// let timer:u64=5;
+/// let report_writer = ReportWriter::new(filename.to_string(), timer, sl.get_aggregated_data());
+/// ```
+///
+/// Advanced usage: create multiple parsers listening to multiple devices
+/// ```rust
+///
+/// ```
+/// TODO: add Advanced usage
+///
+/// # Panics
+/// TODO: add panic description
+///
+/// # Errors
+/// TODO: add error description
+///
+/// # Remarks
+/// TODO: add remarks
 #[derive(Clone)]
 pub struct ReportWriter{
     report_path: Arc<Mutex<String>>,
@@ -26,6 +55,32 @@ pub struct ReportWriter{
 }
 
 impl ReportWriter {
+    /// Creates a new Parser that receives pcap Packets through a channel and forwards ParsedPackets to the given Sender
+    /// # Arguments
+    /// * `report_path` -
+    /// * `rewrite_time` -
+    /// * `aggregated_data` -
+    /// # Example
+    /// Basic usage:
+    /// ```rust
+    /// use Network_analyzer::report_writer::ReportWriter;
+    /// use Network_analyzer::socket_listener::SocketListener;
+    ///
+    /// let sl=SocketListener::new(device);
+    /// let name_input = String::from("file.txt");
+    /// let timer:u64=5;
+    /// let report_writer = ReportWriter::new(filename.to_string(), timer, sl.get_aggregated_data());
+    /// ```
+    /// TODO: add Advanced usage
+    ///
+    /// # Panics
+    /// TODO: add panic description
+    ///
+    /// # Errors
+    /// TODO: add error description
+    ///
+    /// # Remarks
+    /// TODO: add remarks
     pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) -> Self {
         //generate all the Arcs
         let report_path = Arc::new(Mutex::new(report_path));

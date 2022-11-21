@@ -13,15 +13,6 @@ use crate::socket_listener::SocketListener;
 /// let a=Analyzer::new("eth0", &name_input.as_str(), time);
 /// ```
 ///
-///
-/// # Panics
-/// TODO: add panic description
-///
-/// # Errors
-/// TODO: add error description
-///
-/// # Remarks
-/// TODO: add remarks description
 pub struct Analyzer{
     pub sl: SocketListener,
     pub report_writer: ReportWriter,
@@ -29,24 +20,19 @@ pub struct Analyzer{
 
 impl Analyzer{
     ///Creates the [SocketListener] and passes the aggregated data of its [Aggregator] to the [ReportWriter].
-    ///
+    /// # Arguments
+    /// * `filename` - the name of the file on which the aggregated data will be printed
+    /// * `timer` - u64 representing the period of time that must elapse (in the absence of pauses) before the ReportWriter is printed
+    /// * `device` - The name of device to listen to
     /// # Examples
     /// Basic usage:
     /// ```rust
     /// use Network_analyzer::analyzer::Analyzer;
     /// let name_input = String::from("file.txt");
-    /// let time=5;
+    /// let time:u64=5;
     /// let a=Analyzer::new("eth0", &name_input.as_str(), time);
     /// ```
     ///
-    /// # Panics
-    /// TODO: add panic description
-    ///
-    /// # Errors
-    /// TODO: add error description
-    ///
-    /// # Remarks
-    /// TODO: add remarks description
     pub fn new(device:&str,filename:&str,timer:u64)->Self{
         let sl=SocketListener::new(device);
         let report_writer = ReportWriter::new(filename.to_string(), timer, sl.get_aggregated_data());

@@ -7,6 +7,7 @@ use etherparse::TransportHeader::{Icmpv4, Icmpv6, Tcp, Udp};
 use pcap::{Capture, Packet};
 use crate::parsed_packet::ParsedPacket;
 
+///enum to indicate the state to be assumed by the parsing thread
 #[derive(PartialEq,Debug)]
 enum Command {
     PROCEED,
@@ -14,7 +15,7 @@ enum Command {
     EXIT
 }
 
-/// Struct that parses pcap Packets into [ParsedPacket] from a network device and sends them through another channel
+/// Struct to handle parsing from pcap Packets into [ParsedPacket] from a network device and sends them through a channel
 ///
 /// # Examples
 /// Basic usage:
@@ -32,7 +33,7 @@ enum Command {
 /// }
 /// ```
 ///
-/// Advanced usage: create multiple parsers listening to multiple devices
+/// Advanced usage: create multiple [Parser] listening to multiple devices
 /// ```rust
 /// use std::sync::mpsc::{channel, Sender};
 /// use Network_analyzer::parser::Parser;
@@ -55,7 +56,7 @@ enum Command {
 /// TODO: add error description
 ///
 /// # Remarks
-/// Each parser runs in a separate thread, so you can create multiple parsers listening to multiple devices simultaneously
+/// Each [Parser] runs in a separate thread, so you can create multiple [Parser] listening to multiple devices simultaneously
 pub struct Parser{
     cmd:Arc<Mutex<Command>>,
     cv:Arc<Condvar>
@@ -123,27 +124,27 @@ impl Parser{
         Parser{cmd:a,cv:cv1}
     }
 
-    /// Pauses the parser from receiving packets if it is not already paused
+    /// Pauses the [Parser] from receiving packets if it is not already paused
     pub fn stop_iter_cap(&self){
         let mut cmd =self.cmd.lock().unwrap();
         *cmd=Command::PAUSE;
     }
 
-    /// Resumes the parser from receiving packets if it was paused, otherwise does nothing
+    /// Resumes the [Parser] from receiving packets if it was paused, otherwise does nothing
     pub fn resume_iter_cap(&self){
         let mut cmd =self.cmd.lock().unwrap();
         *cmd=Command::PROCEED;
         self.cv.notify_one();
     }
 
-    /// Interrupts the loop of the parser thread, allowing the thread to end
+    /// Interrupts the loop of the [Parser] thread, allowing the thread to end
     pub fn exit_iter_cap(&self){
         let mut cmd =self.cmd.lock().unwrap();
         *cmd=Command::EXIT;
         self.cv.notify_one();
     }
 
-    /// Parses a pcap Packet into a ParsedPacket
+    /// Parses a pcap Packet into a [ParsedPacket]
     fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
         let ph=PacketHeaders::from_ethernet_slice(&packet).unwrap();
         let mut source=String::new();
