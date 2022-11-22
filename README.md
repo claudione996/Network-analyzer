@@ -48,7 +48,7 @@ sudo setcap cap_net_raw,cap_net_admin=eip <your/Network-analyzer/executable/path
 
   <summary>MacOS dependencies&emsp;<img alt="" src="https://user-images.githubusercontent.com/12531596/203199712-198d9a9d-e9c5-478d-8501-5fc6bdeed061.png" width="35px"/></summary>
 
-Mac OS natively has all the dependencies you need to build and run Network-analyzer
+MacOS natively has all the dependencies you need to build and run Network-analyzer
 
 </details>
 
@@ -72,17 +72,42 @@ We pass three parameters to the Analyzer:
   
 the call to new prints aggregated data by network address/port in the specified file (if it does not exist it is created) after the specified time
 
-### Altri componenti
+### Other Components
 
-### Spiegazione dei componenti (Parser, Socketlistener, Aggregator, Reportwriter)
+The Analyzer uses other Struct offered by Crate to function
 
-**Parser:** [Spiegazione parser] [Codice esempio]
-**Aggregator:** [Spiegazione aggregator] [codice esempio]
+<details>
 
-**Socketlistener:** [Spiegazione socketlistener] [codice esempio]
+  <summary>Parser</summary>
 
-**Reportwriter:** [Spiegazione reportwriter] [codice esempio]
+The Parser is a Struct used to listen to pcap packets in transit from a device and transform them into ParsedPackets, i.e. packets that have fields useful for analysis, such as:
+- entry IP address
+- outgoing IP address
+- input port
+- outgoing port
+- protocol
 
+</details>
+<details>
+
+  <summary>Aggregator</summary>
+
+The Aggregator is a Struct that takes the packets sent by its channel's Sender, and aggregates them into a Struct (HashMap): which has the network address/port as key
+</details>
+<details>
+
+  <summary>SocketListener</summary>
+
+Socket listener is a Struct that was created for the purpose of allowing the user not to deal with the implementation of the parser and aggregator.
+In fact, this Struct creates and links an aggregator and a parser and thus allows aggregated data to be obtained
+</details>
+
+<details>
+
+  <summary>ReportWriter</summary>
+
+Socket listener is a Struct that is responsible for taking aggregated data (e.g. from Aggregator) and printing them to files
+</details>
 
 
 ### Esempi di utilizzo avanzati
