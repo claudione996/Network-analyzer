@@ -70,7 +70,7 @@ We pass three parameters to the Analyzer:
 - The name of the file on which we will print the analysis result
 - The time interval in seconds after which the analysis result will be printed out
   
-the call to new prints aggregated data by network/port address in the specified file (if it does not exist it is created) after the specified time
+the call to new prints aggregated data by network address/port in the specified file (if it does not exist it is created) after the specified time
 
 ### Altri componenti
 
