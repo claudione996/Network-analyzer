@@ -131,5 +131,27 @@ fn main() {
 }
 ```
 
-- [Esempio di scrittura di più file di report ( più reportwriter un aggregator )]
-- [Esempio di lettura parallela da più device e scrittura di più file di report ( più analyzer )]
+- Parallel reading from multiple devices and writing multiple report files ( multiple analyzers )
+```rust
+fn main() {
+    let timer:u64=5;
+    let filename_one = String::from("file1.txt");
+    let filename_two = String::from("file2.txt");
+    let a_one=Analyzer::new("eth0", &filename_one.as_str(), timer);
+    let a_two=Analyzer::new("eth1", &filename_two.as_str(), timer);
+}
+```
+
+- Writing multiple report files ( multiple ReportWriters one SocketListener )
+```rust
+fn main() {
+    let sl=SocketListener::new("eth0");
+    let filename_one = String::from("file1.txt");
+    let filename_two = String::from("file2.txt");
+    let timer_one:u64=5;
+    let timer_two:u64=7;
+    
+    let report_writer_one = ReportWriter::new(filename_one, timer_one, sl.get_aggregated_data());
+    let report_writer_two = ReportWriter::new(filename_two, timer_two, sl.get_aggregated_data());
+}
+```
