@@ -110,8 +110,26 @@ Socket listener is a Struct that is responsible for taking aggregated data (e.g.
 </details>
 
 
-### Esempi di utilizzo avanzati
+### Examples of Advanced Uses
+As explained earlier, the various Struct are used to run the Analyzer, which involves the use of a SocketListener (and thus a Parser and Aggregator) and a ReportWriter.
+But these Struct can be used freely by the user to realise different situations
 
-- [Esempio di lettura parallela da più device ( più parser un aggregator )]
+- Parallel reading from multiple devices (multiple Parsers one Aggregator)
+
+```rust
+fn main() {
+    // I am creating a channel where the parser will send the parsed packets
+    let (tx, rx) = channel();
+    // I create a new parser listening to device "eth0" and sending
+    // the parsed packets to the channel i just created
+    let parser1 = Parser::new("eth0", tx.clone());
+    let parser2 = Parser::new("eth1", tx.clone());
+    // Now I can use rx to receive the parsed packets from all the parsers
+    while let Ok(parsed_packet) = rx.recv() {
+       println!("Received packet: {:?}", parsed_packet);
+    }
+}
+```
+
 - [Esempio di scrittura di più file di report ( più reportwriter un aggregator )]
 - [Esempio di lettura parallela da più device e scrittura di più file di report ( più analyzer )]
