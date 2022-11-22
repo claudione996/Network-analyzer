@@ -131,7 +131,7 @@ fn main() {
 }
 ```
 
-- Parallel reading from multiple devices and writing multiple report files ( multiple analyzers )
+- Parallel reading from multiple devices and writing multiple report files ( multiple Analyzers )
 ```rust
 fn main() {
     let timer:u64=5;
