@@ -1,10 +1,8 @@
 # Network analyzer library
 
-Network-analyzer is a **Rust language** crate that allows the interception of incoming and outgoing traffic
-through the network interfaces of a computer and aggregate it by network address/port
+Network-analyzer is a **Rust language** crate that allows the interception of incoming and outgoing traffic through the network interfaces of a computer and aggregates it by network address/port.
 
-In particular, each network address/port will correspond to the protocols that were transported, the cumulative number of bytes transmitted, the timestamp of the first and last
-occurrence of the exchange
+For each network address/port pair some additional information will be displayed: the transported protocol, the cumulative number of bytes transmitted and the timestamp of the first and last occurrence of the exchange.
 
 ## Installation
 
@@ -12,7 +10,7 @@ occurrence of the exchange
 
   <summary>Windows dependencies&emsp;<img alt="" src="https://user-images.githubusercontent.com/12531596/203198673-59a69a92-124f-4a9f-abb0-60712c1a08d8.png" width="35px"/></summary>
 
-In order to correctly run Network-analyzer on Windows systems you need to:
+In order to correctly run Network-analyzer on **Windows** systems you need to:
 
 - Install [Npcap](https://npcap.com/#download).
 
@@ -26,7 +24,7 @@ In order to correctly run Network-analyzer on Windows systems you need to:
 
   <summary>Linux dependencies&emsp;<img alt="" src="https://user-images.githubusercontent.com/12531596/203199234-94ef76ce-f4fc-4694-948f-645dede73999.png" width="35px"/></summary>
 
-In order to correctly run Network-analyzer on Linux systems, install the libraries and header files for the libpcap library:
+In order to correctly run Network-analyzer on **Linux** systems, install the libraries and header files for the libpcap library:
 - On Debian based Linux:
 ```sh
 sudo apt-get install libpcap-dev
@@ -48,7 +46,7 @@ sudo setcap cap_net_raw,cap_net_admin=eip <your/Network-analyzer/executable/path
 
   <summary>MacOS dependencies&emsp;<img alt="" src="https://user-images.githubusercontent.com/12531596/203199712-198d9a9d-e9c5-478d-8501-5fc6bdeed061.png" width="35px"/></summary>
 
-MacOS natively has all the dependencies you need to build and run Network-analyzer
+**MacOS** natively has all the dependencies you need to build and run Network-analyzer.
 
 </details>
 
@@ -56,7 +54,7 @@ MacOS natively has all the dependencies you need to build and run Network-analyz
 
 ### Analyzer Example
 
-A simple example of the potential of Network-analyzer is given by the Struct Analyzer
+A simple example of the potential of Network-analyzer is given by the Struct **Analyzer**
 
 ```rust
 fn main() {
@@ -66,21 +64,21 @@ fn main() {
 }
 ```
 We pass three parameters to the Analyzer:
-- The device on which we listen for packet traffic
+- The device on which we want to listen for packet traffic
 - The name of the file on which we will print the analysis result
 - The time interval in seconds after which the analysis result will be printed out
-  
-the call to new prints aggregated data by network address/port in the specified file (if it does not exist it is created) after the specified time
+
+Whenever the specified time interval passes, the aggregated data by network address/port will be printed in the specified file (if it does not exist it is created).
 
 ### Other Components
 
-The Analyzer uses other Struct offered by Crate to function
+The Analyzer uses other Structs offered by Crate to function
 
 <details>
 
   <summary>Parser</summary>
 
-The Parser is a Struct used to listen to pcap packets in transit from a device and transform them into ParsedPackets, i.e. packets that have fields useful for analysis, such as:
+The **Parser** is a Struct used to listen to pcap packets in transit from a device and transforms them into ParsedPackets, i.e. packets that have useful fields for analysis, such as:
 - entry IP address
 - outgoing IP address
 - input port
@@ -92,27 +90,27 @@ The Parser is a Struct used to listen to pcap packets in transit from a device a
 
   <summary>Aggregator</summary>
 
-The Aggregator is a Struct that takes the packets sent by its channel's Sender, and aggregates them into a Struct (HashMap): which has the network address/port as key
+The **Aggregator** is a Struct that takes the packets sent by its channel's Sender and aggregates them into a Struct (HashMap), which has the network address/port as key.
 </details>
+
 <details>
 
   <summary>SocketListener</summary>
 
-Socket listener is a Struct that was created for the purpose of allowing the user not to deal with the implementation of the parser and aggregator.
-In fact, this Struct creates and links an aggregator and a parser and thus allows aggregated data to be obtained
+**Socket Listener** is a Struct used to create and link an **Aggregator** and a **Parser**, thus allowing aggregated data to be obtained. By using this Struct, the user does not have to deal with the implementation of the **Parser** and **Aggregator**.
 </details>
 
 <details>
 
   <summary>ReportWriter</summary>
 
-Socket listener is a Struct that is responsible for taking aggregated data (e.g. from Aggregator) and printing them to files
+**Report Writer** is a Struct that is responsible for taking aggregated data (e.g. from **Aggregator**) and printing them to files.
 </details>
 
 
 ### Examples of Advanced Uses
-As explained earlier, the various Struct are used to run the Analyzer, which involves the use of a SocketListener (and thus a Parser and Aggregator) and a ReportWriter.
-But these Struct can be used freely by the user to realise different situations
+The various Structs are used to run the **Analyzer**, which involves the use of a **Socket Listener** (and thus a Parser and Aggregator) and a **ReportWriter**.
+But these Structs can be used freely by the user to manage different situations.
 
 - Parallel reading from multiple devices (multiple Parsers one Aggregator)
 
