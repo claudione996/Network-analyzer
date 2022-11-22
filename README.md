@@ -54,7 +54,7 @@ Mac OS natively has all the dependencies you need to build and run Network-analy
 
 ## Usage
 
-### Analyser Example
+### Analyzer Example
 
 A simple example of the potential of Network-analyzer is given by the Struct Analyzer
 
