@@ -31,11 +31,21 @@ enum Command {
 /// let report_writer = ReportWriter::new(filename.to_string(), timer, sl.get_aggregated_data());
 /// ```
 ///
-/// Advanced usage: create multiple parsers listening to multiple devices
+/// Advanced usage: Writing multiple report files (multiple ReportWriters one SocketListener)
 /// ```rust
+///use Network_analyzer::report_writer::ReportWriter;
+/// use Network_analyzer::socket_listener::SocketListener;
 ///
+/// let sl=SocketListener::new("eth0");
+/// let filename_one = String::from("file1.txt");
+/// let filename_two = String::from("file2.txt");
+/// let timer_one:u64=5;
+/// let timer_two:u64=7;
+///
+/// let report_writer_one = ReportWriter::new(filename_one, timer_one, sl.get_aggregated_data());
+/// let report_writer_two = ReportWriter::new(filename_two, timer_two, sl.get_aggregated_data());
 /// ```
-/// TODO: add Advanced usage
+///
 ///
 /// # Panics
 /// TODO: add panic description
@@ -55,11 +65,11 @@ pub struct ReportWriter{
 }
 
 impl ReportWriter {
-    /// Creates a new Parser that receives pcap Packets through a channel and forwards ParsedPackets to the given Sender
+    /// Creates a new ReportWriter that prints on a file, a table with the aggregated data, after a time passed as parameter
     /// # Arguments
-    /// * `report_path` -
-    /// * `rewrite_time` -
-    /// * `aggregated_data` -
+    /// * `report_path` - The name of the file on which the table with the aggregated data will be printed.
+    /// * `rewrite_time` - The period of time that must elapse before writing to file
+    /// * `aggregated_data` - Aggregated data that have as key [Connection] and as a value [ConnectionMetadata]
     /// # Example
     /// Basic usage:
     /// ```rust
@@ -71,7 +81,7 @@ impl ReportWriter {
     /// let timer:u64=5;
     /// let report_writer = ReportWriter::new(filename.to_string(), timer, sl.get_aggregated_data());
     /// ```
-    /// TODO: add Advanced usage
+    ///
     ///
     /// # Panics
     /// TODO: add panic description
@@ -130,48 +140,57 @@ impl ReportWriter {
         ReportWriter { report_path, rewrite_time: rwr_time, aggregated_data, cmd, cv_cmd }
     }
 
+    /// Stops the [ReportWriter], stopping the write timer after which, the print to file method is called
     pub fn pause(&self) {
         let mut cmd = self.cmd.lock().unwrap();
         *cmd = Command::PAUSE;
         self.cv_cmd.notify_one();
     }
 
+    /// Reactivates the [ReportWriter], reactivating the write timer after which, the print to file method is called
     pub fn resume(&self) {
         let mut cmd = self.cmd.lock().unwrap();
         *cmd = Command::PROCEED;
         self.cv_cmd.notify_one();
     }
 
+    /// Interrupts the loop of the [ReportWriter] thread, allowing the thread to end
     pub fn exit(&self) {
         let mut cmd = self.cmd.lock().unwrap();
         *cmd = Command::EXIT;
         self.cv_cmd.notify_one();
     }
 
+    /// Modifies the value of the timer
     pub fn set_rewrite_time(&self, rewrite_time: u64) {
         let mut rwr_time = self.rewrite_time.lock().unwrap();
         *rwr_time = rewrite_time;
     }
 
+    /// Return the value of the timer
     pub fn get_rewrite_time(&self) -> u64 {
         let rwr_time = self.rewrite_time.lock().unwrap();
         *rwr_time
     }
 
+    /// Return aggregated data
     pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<Connection, ConnectionMetadata>>> {
         Arc::clone(&self.aggregated_data)
     }
 
+    ///Change the name of the file on which the aggregated data will be printed
     pub fn set_report_path(&self, new_report_path: String) {
         let mut report_path = self.report_path.lock().unwrap();
         *report_path = new_report_path;
     }
 
+    ///Return the name of the file on which the aggregated data will be printed
     pub fn get_report_path(&self) -> String {
         let report_path = self.report_path.lock().unwrap();
         (*report_path).clone()
     }
 
+    ///Aggregate data formatting method
     //, aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
     fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) {
         let aggregated_data = aggregated_data.lock().unwrap();
@@ -195,6 +214,7 @@ impl ReportWriter {
         }
     }
 
+    ///print-to-file method
     pub fn create_dir_report(filename:&str) -> BufWriter<File> {
         let res_dir=fs::create_dir("report");
         //TODO: handle error or success
