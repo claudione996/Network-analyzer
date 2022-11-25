@@ -13,7 +13,7 @@ fn main() {
     let device_name = select_device();
 
     // I create a new parser listening to the selected device and sending the parsed packets to the channel i just created
-    let parser = Parser::new(&device_name, tx);
+    let _parser = Parser::new(&device_name, tx);
 
     /* Now I can use rx to receive the parsed packets from all the parsers
      notice that the parser is running in a separate thread, so i can wait for the packets in the main thread.

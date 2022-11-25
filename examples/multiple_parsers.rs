@@ -14,7 +14,7 @@ fn main() {
     //select the second device from all the network devices of the pc
     println!("Select the second device to sniff:");
     let second_device_name = select_device();
-    // I create a new parser listening to device "eth0" and sending the parsed packets to the channel i just created
+    // I create the parsers listening to the devices and both sending the parsed packets to the channel i just created
     let parser1 = Parser::new(&first_device_name, tx.clone());
     let parser2 = Parser::new(&second_device_name, tx.clone());
     // Now I can use rx to receive the parsed packets from all the parsers
