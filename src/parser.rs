@@ -83,7 +83,7 @@ impl Parser{
     /// or is dropped
     pub fn new(device: &str, aggregator_tx: Sender<ParsedPacket>) -> Parser {
 
-        let mut cap = Capture::from_device(device).unwrap()
+        let mut cap = Capture::from_device(device).expect("ERR: no such device found")
             .promisc(true)
             .open().expect("Failed to open device");
 
@@ -156,7 +156,7 @@ impl Parser{
         let mut dest_port = None;
         let mut show= true;
         match ph.ip {
-            Some(Version4(h, _)) =>{
+            Some(Version4(ref h, _)) =>{
                 //println!("V4");
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
@@ -170,7 +170,7 @@ impl Parser{
                 let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
             },
-            Some(Version6(h, _)) => {
+            Some(Version6(ref h, _)) => {
                 //println!("IP VERSION 6");
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
@@ -184,7 +184,9 @@ impl Parser{
                 let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
             },
-            None => {//TODO: decide what to do with packets without IP header
+            None => {
+                println!("NO IP HEADER ERR: {:?} ",ph);
+                //TODO: decide what to do with packets without IP header
             }
         }
         match  ph.transport {
@@ -219,6 +221,7 @@ impl Parser{
                 Icmpv6Type::EchoReply(_) => String::from("ICMPv6: Echo Reply"),
             },
             None => {//TODO: decide how to handle this case
+                println!("NO TRANSPORT LEVEL ERR: {:?} ",ph);
                 show = false;
             }
         }

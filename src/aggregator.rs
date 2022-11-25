@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{channel, RecvError, Sender};
 use crate::parsed_packet::ParsedPacket;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
@@ -79,7 +79,8 @@ impl Aggregator{
                 let msg = rx.recv();
                 match msg {
                     Err(e) => {
-                        println!("Error: {}", e);
+                        //All senders to this channel have been dropped
+                        //the thread can die.
                         loop1 = false;
                     },
                     Ok(p) => {
