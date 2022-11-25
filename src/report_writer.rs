@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::mem::needs_drop;
 use std::os::raw::c_float;
+use std::ptr::write;
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Sender};
 use crate::parsed_packet::ParsedPacket;
@@ -191,7 +192,6 @@ impl ReportWriter {
     }
 
     ///Aggregate data formatting method
-    //, aggregated_data: Arc<Mutex<HashMap<(String,usize),(String,usize,usize,usize)>>>
     fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) {
         let aggregated_data = aggregated_data.lock().unwrap();
 
@@ -200,17 +200,7 @@ impl ReportWriter {
         writeln!(output, "| :---------------: | :---------------: | :-------: | :-------: | :-------: | :-----------: | :-------------------: | :----------------: |").expect("Error writing output file\n\r");
 
         for (conn, data) in aggregated_data.iter() {
-            let port_src = match conn.source_port {
-                Some(x) => x.to_string(),
-                None => String::from("-"),
-            };
-            let port_dst = match conn.destination_port {
-                Some(x) => x.to_string(),
-                None => String::from("-"),
-            };
-            let bytes = data.size.to_string();
-            //                  ip_src,     ip_dst,     port_src,   port_dst,  protocol,   bytes, first_timestamp,last_timestamp
-            writeln!(output, "| {0:<15} \t| {1:<15} \t| {2:<5} \t | {3:<5} \t| {4:<7} \t| {5:<9} \t| {6:<15} \t| {7:<3}| ", conn.source_ip, conn.destination_ip, port_src, port_dst, conn.protocol, bytes, data.first_timestamp, data.last_timestamp).expect("Error writing output file\n\r");
+            writeln!(output,"{}{}",conn,data).expect("Error writing output file\n\r");
         }
     }
 
