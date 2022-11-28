@@ -2,12 +2,10 @@ use std::sync::{Arc, mpsc};
 use pcap::{Capture, Device};
 //import lib.rs
 use Network_analyzer::*;
-use Network_analyzer::network_analyzer_components;
-use Network_analyzer::network_analyzer_components::aggregator::Aggregator;
-//import ParsedPacket
-use network_analyzer_components::ParsedPacket::ParsedPacket;
-//import parser
-use network_analyzer_components::parser::Parser;
+use Network_analyzer::aggregator::Aggregator;
+use Network_analyzer::parsed_packet::ParsedPacket;
+use Network_analyzer::parser::Parser;
+use Network_analyzer::report_entry::Connection;
 
 
 #[test]
@@ -20,10 +18,10 @@ fn test_aggregator() {
     let protocol1 : String = "TCP".to_string();
     let size1 : usize = 64;
     //declare a list of ParsePacket initialized with dummy values
-    let list:Vec<ParsedPacket> = vec![ParsedPacket::new(timestamp1,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1),
-                    ParsedPacket::new(timestamp1+1,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1),
-                    ParsedPacket::new(timestamp1+2,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1),
-                    ParsedPacket::new(timestamp1+3,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1)];
+    let list:Vec<ParsedPacket> = vec![ParsedPacket::new(timestamp1.to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
+                                  ParsedPacket::new((timestamp1+1).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
+                                  ParsedPacket::new((timestamp1+2).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
+                                  ParsedPacket::new((timestamp1+3).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1)];
     let mut aggregator = Aggregator::new();
     //send each packet to the aggregator
     for packet in list {
@@ -32,17 +30,15 @@ fn test_aggregator() {
     //wait for the aggregator to finish
     std::thread::sleep(std::time::Duration::from_secs(5));
     //test the aggregated data
-    let key = ("128.0.0.2".to_string(),80);
+    let key = Connection::new(source_ip1,destination_ip1,Some(source_port1),Some(destination_port1),protocol1);
     let binding = aggregator.get_aggregated_data();
     let aggregated_data = binding.lock().unwrap();
     assert_eq!(aggregated_data.len(),1);
     assert_eq!(aggregated_data.contains_key(&key),true);
     let value = aggregated_data.get(&key).unwrap();
-    //assert_eq!(*value.len(),4);
-    assert_eq!(value.0,"TCP".to_string());
-    assert_eq!(value.1,256 as usize);
-    assert_eq!(value.2,1667775485);
-    assert_eq!(value.3,1667775488);
+    assert_eq!(value.size,256 as usize);
+    assert_eq!(value.first_timestamp,1667775485.to_string());
+    assert_eq!(value.last_timestamp,1667775488.to_string());
     println!("aggregated record received: {:?}, {:?}",key,value);
 }
 
@@ -65,13 +61,13 @@ fn test_aggregator_multiple_destinations() {
     let protocol2 : String = "TCP".to_string();
     let size2 : usize = 64;
 
-    let list1:Vec<ParsedPacket> = vec![ParsedPacket::new(timestamp1,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1),
-                                      ParsedPacket::new(timestamp1+1,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1),
-                                      ParsedPacket::new(timestamp1+2,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1),
-                                      ParsedPacket::new(timestamp1+3,source_ip1.clone(),destination_ip1.clone(),source_port1,destination_port1,protocol1.clone(),size1)];
+    let list1:Vec<ParsedPacket> = vec![ParsedPacket::new(timestamp1.to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
+                                   ParsedPacket::new((timestamp1+1).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
+                                   ParsedPacket::new((timestamp1+2).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
+                                   ParsedPacket::new((timestamp1+3).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1)];
 
-    let list2:Vec<ParsedPacket> = vec![ParsedPacket::new(timestamp2,source_ip2.clone(),destination_ip2.clone(),source_port2,destination_port2,protocol2.clone(),size2),
-                                      ParsedPacket::new(timestamp2+1,source_ip2.clone(),destination_ip2.clone(),source_port2,destination_port2,protocol2.clone(),size2)];
+    let list2:Vec<ParsedPacket> = vec![ParsedPacket::new(timestamp2.to_string(),source_ip2.clone(),destination_ip2.clone(),Some(source_port2),Some(destination_port2),protocol2.clone(),size2),
+                                   ParsedPacket::new((timestamp2+1).to_string(),source_ip2.clone(),destination_ip2.clone(),Some(source_port2),Some(destination_port2),protocol2.clone(),size2)];
 
     let mut aggregator = Aggregator::new();
     //send each packet to the aggregator
@@ -85,8 +81,8 @@ fn test_aggregator_multiple_destinations() {
     std::thread::sleep(std::time::Duration::from_secs(2));
     //test the aggregated data
     //test the aggregated data
-    let key1 = ("128.0.0.2".to_string(),80);
-    let key2 = ("128.0.0.4".to_string(),81);
+    let key1 = Connection::new(source_ip1,destination_ip1,Some(source_port1),Some(destination_port1),protocol1);
+    let key2 = Connection::new(source_ip2,destination_ip2,Some(source_port2),Some(destination_port2),protocol2);
     let binding = aggregator.get_aggregated_data();
     let aggregated_data = binding.lock().unwrap();
     assert_eq!(aggregated_data.len(),2);
@@ -95,15 +91,13 @@ fn test_aggregator_multiple_destinations() {
     let value1 = aggregated_data.get(&key1).unwrap();
     let value2 = aggregated_data.get(&key2).unwrap();
     //assert_eq!(*value.len(),4);
-    assert_eq!(value1.0,"TCP".to_string());
-    assert_eq!(value1.1,256 as usize);
-    assert_eq!(value1.2,1667775485);
-    assert_eq!(value1.3,1667775488);
+    assert_eq!(value1.size,256 as usize);
+    assert_eq!(value1.first_timestamp,1667775485.to_string());
+    assert_eq!(value1.last_timestamp,1667775488.to_string());
 
-    assert_eq!(value2.0,"TCP".to_string());
-    assert_eq!(value2.1,128 as usize);
-    assert_eq!(value2.2,1667775470);
-    assert_eq!(value2.3,1667775471);
+    assert_eq!(value2.size,128 as usize);
+    assert_eq!(value2.first_timestamp,1667775470.to_string());
+    assert_eq!(value2.last_timestamp,1667775471.to_string());
     println!("aggregated record1 received: {:?}, {:?}",key1,value1);
     println!("aggregated record2 received: {:?}, {:?}",key2,value2);
 

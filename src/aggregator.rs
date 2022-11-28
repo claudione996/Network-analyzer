@@ -78,7 +78,7 @@ impl Aggregator{
             while loop1 {
                 let msg = rx.recv();
                 match msg {
-                    Err(e) => {
+                    Err(_) => {
                         //All senders to this channel have been dropped
                         //the thread can die.
                         loop1 = false;
