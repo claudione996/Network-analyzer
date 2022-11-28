@@ -49,11 +49,6 @@ enum Command {
 /// }
 /// ```
 ///
-/// # Panics
-/// TODO: add panic description
-///
-/// # Errors
-/// TODO: add error description
 ///
 /// # Remarks
 /// Each [Parser] runs in a separate thread, so you can create multiple [Parser] listening to multiple devices simultaneously
@@ -111,7 +106,13 @@ impl Parser{
                                 let p=Self::parse_packet(packet);
                                 match p {
                                     None => println!("packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)"),
-                                    Some(x) => aggregator_tx.send(x).unwrap(),
+                                    Some(x) => match aggregator_tx.send(x) {
+                                        Ok(x) => x,
+                                        Err(_) => {
+                                            println!("Error sending parsed packet, receiver dropped, terminating parser thread");
+                                            break;
+                                        },
+                                    },
                                 }
                             }
                         }
@@ -145,8 +146,14 @@ impl Parser{
     }
 
     /// Parses a pcap Packet into a [ParsedPacket]
+    /// # Arguments
+    /// * `packet` - The pcap Packet to be parsed
+    /// # Returns
+    /// A [ParsedPacket] if the packet is  a valid IP packet from an ethernet slice, `None` otherwise
+    /// # Remarks
+    /// This function is used internally by the [Parser] to parse the packets it receives
     fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
-        let ph=PacketHeaders::from_ethernet_slice(&packet).unwrap();
+        let ph=PacketHeaders::from_ethernet_slice(&packet).unwrap_or(PacketHeaders{ link: None, vlan: None, ip:None, transport: None, payload: &[] });
         let mut source=String::new();
         let mut destination=String::new();
         let mut size = 0;
@@ -154,10 +161,8 @@ impl Parser{
         let mut trs_protocol = String::new();
         let mut src_port = None;
         let mut dest_port = None;
-        let mut show= true;
         match ph.ip {
             Some(Version4(ref h, _)) =>{
-                //println!("V4");
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
                 source=s;
@@ -171,7 +176,6 @@ impl Parser{
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
             },
             Some(Version6(ref h, _)) => {
-                //println!("IP VERSION 6");
                 let mut s=h.source.into_iter().map(|i| i.to_string() + ".").collect::<String>();
                 s.pop();
                 source=s;
@@ -186,7 +190,7 @@ impl Parser{
             },
             None => {
                 println!("NO IP HEADER ERR: {:?} ",ph);
-                //TODO: decide what to do with packets without IP header
+                return  None;
             }
         }
         match  ph.transport {
@@ -220,22 +224,20 @@ impl Parser{
                 Icmpv6Type::EchoRequest(_) => String::from("ICMPv6: Echo Request"),
                 Icmpv6Type::EchoReply(_) => String::from("ICMPv6: Echo Reply"),
             },
-            None => {//TODO: decide how to handle this case
+            None => {
                 println!("NO TRANSPORT LEVEL ERR: {:?} ",ph);
-                show = false;
+                return None;
             }
         }
-        if show
-        {
-            let parsed_p= ParsedPacket::new(ts, source, destination, src_port, dest_port, trs_protocol, size);
-            //println!("{:?}", parsed_p);
-            return Some(parsed_p);
-        }
-        None
+
+        return  Some(ParsedPacket::new(ts, source, destination, src_port, dest_port, trs_protocol, size));
+
     }
 
 }
 
+/// When the parser instance is dropped also the associated thread
+/// will be stopped
 impl Drop for Parser{
     fn drop(&mut self) {
         println!("exitParser");
