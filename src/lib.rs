@@ -72,15 +72,4 @@ pub fn select_device() -> String {
     return device.name;
 }
 
-/*TODO: decide if this function is needed and if yes, where to put it
-pub fn print_packets(mut cap:Capture<Active>){
-    while let Ok(packet) = cap.next_packet() {
-        let p=parse_packet(packet);
-        match p {
-            None => {}
-            Some(x) => {println!("{:?}",x);}
-        }
-    }
-}
-*/
 
