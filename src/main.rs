@@ -1,11 +1,11 @@
 use std::{io, num::ParseIntError};
-use crate::modules::{analyzer::Analyzer, lib::select_device};
+use Network_analyzer::analyzer::Analyzer;
+use Network_analyzer::select_device;
 
-mod modules;
 
 fn main() {
-    //scheda di binco: "\\Device\\NPF_{CD484432-E2CB-46E8-8FCC-3D919CF3533E}"
-    // scheda di giovanni: "\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}"
+    //scheda di Binco: "\\Device\\NPF_{CD484432-E2CB-46E8-8FCC-3D919CF3533E}"
+    //scheda di giovanni: "\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}"
     //scheda di claudione: "en0"
     //scheda di paolo: "\\Device\\NPF_{CA1DFCEA-2C68-4269-9347-4B04CB3E6420}"
 
