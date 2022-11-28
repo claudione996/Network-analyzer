@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::{BufWriter, ErrorKind, Write};
 use std::mem::needs_drop;
 use std::os::raw::c_float;
 use std::ptr::write;
@@ -49,13 +49,12 @@ enum Command {
 ///
 ///
 /// # Panics
-/// TODO: add panic description
-///
-/// # Errors
-/// TODO: add error description
+/// The associated thread will panic if the file or the report/folder cannot be opened/created
+/// by the [ReportWriter::write_report] method or if the `aggregated_data` lock is poisoned
 ///
 /// # Remarks
-/// TODO: add remarks
+/// Is meant to be used in conjunction with one or multiple [SocketListener] or [Aggregator] instances,
+/// unless custom implementation is needed, the [Analyzer] struct might be more suitable
 #[derive(Clone)]
 pub struct ReportWriter{
     report_path: Arc<Mutex<String>>,
@@ -85,13 +84,7 @@ impl ReportWriter {
     ///
     ///
     /// # Panics
-    /// TODO: add panic description
-    ///
-    /// # Errors
-    /// TODO: add error description
-    ///
-    /// # Remarks
-    /// TODO: add remarks
+    /// Spawn a new thread that will panic if the file or the `report/` folder cannot be opened/created
     pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) -> Self {
         //generate all the Arcs
         let report_path = Arc::new(Mutex::new(report_path));
@@ -191,7 +184,13 @@ impl ReportWriter {
         (*report_path).clone()
     }
 
-    ///Aggregate data formatting method
+    /// Prints on a markdown file a table representing the aggregated data
+    /// # Arguments
+    /// * `report_path` - The name of the file on which the table with the aggregated data will be printed.
+    /// * `aggregated_data` - Aggregated data that have as key [Connection] and as a value [ConnectionMetadata]
+    /// # Panics
+    /// panics if the file or the `report/` folder cannot be created/opened
+    /// also panics if the aggregated data lock is poisoned
     fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) {
         let aggregated_data = aggregated_data.lock().unwrap();
 
@@ -204,20 +203,36 @@ impl ReportWriter {
         }
     }
 
-    ///print-to-file method
+    /// Creates the directory `report/` if not present and the file `report/[filename].md`
+    /// # Arguments
+    /// * `filename` - The name of the file on which the table with the aggregated data will be printed.
+    ///
+    /// # Return
+    /// The BufWriter pointing to the file `report/[filename].md`
+    ///
+    /// # Panics
+    /// If the directory `report/` cannot be created because:
+    /// - User lacks permissions to create directory at path.
+    /// - Other errors returned by [std::fs::create_dir] **except for the `AlreadyExists` error**.
+    ///
+    /// or the file `report/[filename].md` cannot be created
+    ///
     pub fn create_dir_report(filename:&str) -> BufWriter<File> {
         let res_dir=fs::create_dir("report");
-        //TODO: handle error or success
         match res_dir {
-            Ok(_) => {}
-            Err(_) => {}
+            Ok(_) => {},
+            Err(e) => {
+                if e.kind() != ErrorKind::AlreadyExists {
+                    panic!("Error creating report directory: {}", e);
+                }
+            }
         }
         let mut path =String::from("report/");
         path.push_str(filename);
         path.push_str(".md");
         println!("{path}");
-        let input=File::create(path.as_str()).expect("Error creating output file\n\r");
-        let output = BufWriter::new(input);
+        let file=File::create(path.as_str()).expect("Error creating output file\n\r");
+        let output = BufWriter::new(file);
         return output;
 
     }
