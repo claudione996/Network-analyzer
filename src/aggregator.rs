@@ -73,7 +73,7 @@ impl Aggregator{
         let mut aggregated_data_clone = Arc::clone(&aggregated_data);
 
         std::thread::spawn( move || {
-            println!("Aggregator thread started");
+            println!("Network analyzer started");
             let mut loop1 = true;
             while loop1 {
                 let msg = rx.recv();
@@ -84,19 +84,19 @@ impl Aggregator{
                         loop1 = false;
                     },
                     Ok(p) => {
-                        println!("processing: {:?}", p);
+                      //  println!("processing: {:?}", p);
 
                         let key = Connection::new(p.source_ip, p.destination_ip, p.source_port, p.destination_port, p.protocol);
                         let mut aggregated_map = aggregated_data_clone.lock().unwrap();
 
                         if aggregated_map.contains_key(&key) {
-                            println!("Key already exists, updating value");
+                         //   println!("Key already exists, updating value");
                             let mut value = aggregated_map.get_mut(&key).unwrap();
                             (*value).size = p.size + (*value).size;
                             (*value).last_timestamp = p.timestamp;
                             //aggregated_map.insert(key,(*value).clone());
                         } else {
-                            println!("Key does not exist, inserting new value");
+                         //   println!("Key does not exist, inserting new value");
                             let value = ConnectionMetadata::new(p.size,p.timestamp.clone(),p.timestamp);
                             aggregated_map.insert(key,value);
                         }

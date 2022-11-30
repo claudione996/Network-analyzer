@@ -98,33 +98,34 @@ impl ReportWriter {
         let aggregated_data_clone = aggregated_data.clone();
 
         std::thread::spawn( move || {
-            println!("ReportWriter thread started");
+            //println!("ReportWriter thread started");
             let mut loop1 = true;
             while loop1 {
                 let mut cmd = cmd_clone.lock().unwrap();
                 match *cmd {
                     Command::EXIT => {
-                        println!("ReportWriter thread exiting");
+                       // println!("ReportWriter thread exiting");
                         loop1 = false;
                     },
                     Command::PAUSE => {
-                        println!("ReportWriter thread paused");
+                        //println!("ReportWriter thread paused");
                         cmd = cv_cmd_clone.wait_while(cmd, |cmd| *cmd == Command::PAUSE).unwrap();
                     },
                     Command::PROCEED => {
                         let rwr_time = rwr_time_clone.lock().unwrap();
-                        println!("ReportWriter thread proceeding, will wait for: {:?}", rwr_time);
+                       // println!("ReportWriter thread proceeding, will wait for: {:?}", rwr_time);
                         //release the lock on cmd
                         drop(cmd);
                         std::thread::sleep(std::time::Duration::from_secs(*rwr_time as u64));
                         //get the lock on cmd again and check if it is still "PROCEED"
                         let cmd = cmd_clone.lock().unwrap();
                         if *cmd == Command::PROCEED{
-                            println!("ReportWriter thread awake, writing report");
+                         //   println!("ReportWriter thread awake, writing report");
                             let report_path = report_path_clone.lock().unwrap();
                             ReportWriter::write_report((*report_path).as_str(), aggregated_data_clone.clone());
                         }
-                        else { println!("Report Writer received command: {:?} while sleeping so the report will not be written",*cmd); }
+                        else { //println!("Report Writer received command: {:?} while sleeping so the report will not be written",*cmd);
+                            }
                     }
                 }
             }
@@ -228,7 +229,7 @@ impl ReportWriter {
         let mut path =String::from("report/");
         path.push_str(filename);
         path.push_str(".md");
-        println!("{path}");
+        //println!("{path}");
         let file=File::create(path.as_str()).expect("Error creating output file\n\r");
         let output = BufWriter::new(file);
         return output;

@@ -34,7 +34,7 @@ fn main() {
             .read_line(&mut name_input)
             .expect("Failed to read line");
     let name_input = name_input.trim();
-    println!("Report will be saved in report/{name_input}.txt\n");
+    println!("Report will be saved in report/{name_input}.md\n");
 
     let a=Analyzer::new(&device_name, name_input, time as u64);
 

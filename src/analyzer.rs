@@ -40,13 +40,13 @@ impl Analyzer{
     }
     /// Pausing SocketListener and report writer
     pub fn pause(&self){
-        println!("choice 1: pausing SocketListener and report writer");
+        println!("PAUSE: pausing Network Analyzer");
         self.sl.pause();
         self.report_writer.pause();
     }
     /// Resuming SocketListener and report writer
     pub fn resume(&self){
-        println!("choice 2: resuming SocketListener and report writer");
+        println!("RESUME: resuming Network Analyzer");
         self.sl.resume();
         self.report_writer.resume();
     }

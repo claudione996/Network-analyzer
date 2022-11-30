@@ -88,7 +88,7 @@ impl Parser{
         let cv1=cv.clone();
 
         std::thread::spawn( move || {
-            println!("Parser thread started");
+           // println!("Parser thread started");
             loop {
                 match cap.next_packet() {
                     Ok(packet) => {
@@ -96,7 +96,7 @@ impl Parser{
                         let mut cmd = cmd.lock().unwrap();
                         match *cmd {
                             Command::EXIT => {
-                                println!("ReportWriter thread exiting");
+                               // println!("ReportWriter thread exiting");
                                 break;
                             },
                             Command::PAUSE => {
@@ -105,11 +105,12 @@ impl Parser{
                             Command::PROCEED => {
                                 let p=Self::parse_packet(packet);
                                 match p {
-                                    None => println!("packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)"),
+                                    None => //println!("packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)")
+                                    {},
                                     Some(x) => match aggregator_tx.send(x) {
                                         Ok(x) => x,
                                         Err(_) => {
-                                            println!("Error sending parsed packet, receiver dropped, terminating parser thread");
+                                           //c println!("Error sending parsed packet, receiver dropped, terminating parser thread");
                                             break;
                                         },
                                     },
@@ -117,7 +118,8 @@ impl Parser{
                             }
                         }
                     },
-                    Err(_) => {println!("Packet Error"); break }
+                    Err(_) => { //println!("Packet Error");
+                        break }
                 }
             }
         });
@@ -189,7 +191,7 @@ impl Parser{
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
             },
             None => {
-                println!("NO IP HEADER ERR: {:?} ",ph);
+               // println!("NO IP HEADER ERR: {:?} ",ph);
                 return  None;
             }
         }
@@ -225,7 +227,7 @@ impl Parser{
                 Icmpv6Type::EchoReply(_) => String::from("ICMPv6: Echo Reply"),
             },
             None => {
-                println!("NO TRANSPORT LEVEL ERR: {:?} ",ph);
+              //  println!("NO TRANSPORT LEVEL ERR: {:?} ",ph);
                 return None;
             }
         }
