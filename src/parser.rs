@@ -1,6 +1,6 @@
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{Sender};
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc, Local, FixedOffset, TimeZone};
 use etherparse::{Icmpv4Type, Icmpv6Type, IpHeader, PacketHeaders, TransportHeader};
 use etherparse::IpHeader::{Version4, Version6};
 use etherparse::TransportHeader::{Icmpv4, Icmpv6, Tcp, Udp};
@@ -173,8 +173,9 @@ impl Parser{
                 destination=d;
                 size=packet.header.len as usize;
                 let time_number=packet.header.ts.tv_sec as i64;
-                let nt = NaiveDateTime::from_timestamp(time_number, 0);
-                let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
+                let local_tz:FixedOffset = TimeZone::from_offset(Local::now().offset());
+                let nt = NaiveDateTime::from_timestamp_opt(time_number, 0);
+                let dt = local_tz.from_utc_datetime(&nt.unwrap());
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
             },
             Some(Version6(ref h, _)) => {
@@ -186,8 +187,9 @@ impl Parser{
                 destination=d;
                 size=packet.header.len as usize;
                 let time_number=packet.header.ts.tv_sec as i64;
-                let nt = NaiveDateTime::from_timestamp(time_number, 0);
-                let dt: DateTime<Utc> = DateTime::from_utc(nt, Utc);
+                let local_tz:FixedOffset = TimeZone::from_offset(Local::now().offset());
+                let nt = NaiveDateTime::from_timestamp_opt(time_number, 0);
+                let dt = local_tz.from_utc_datetime(&nt.unwrap());
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
             },
             None => {
@@ -242,7 +244,7 @@ impl Parser{
 /// will be stopped
 impl Drop for Parser{
     fn drop(&mut self) {
-        println!("exitParser");
+        //println!("exitParser");
         self.exit_iter_cap();
     }
 }

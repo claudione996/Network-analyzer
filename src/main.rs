@@ -9,6 +9,8 @@ fn main() {
     //scheda di claudione: "en0"
     //scheda di paolo: "\\Device\\NPF_{CA1DFCEA-2C68-4269-9347-4B04CB3E6420}"
 
+    println!("Welcome to Network Analyzer!\n");
+
     println!("Select the device to sniff:");
     let device_name = select_device();
     
@@ -34,23 +36,31 @@ fn main() {
             .read_line(&mut name_input)
             .expect("Failed to read line");
     let name_input = name_input.trim();
-    println!("Report will be saved in report/{name_input}.md\n");
+    println!("Report will be saved in 'report/{name_input}.md'\n");
 
     let a=Analyzer::new(&device_name, name_input, time as u64);
 
     loop {
-        println!("options: 1 (pause), 2 (resume), 3 (exit)");
+        println!("Options");
+        println!("1 - PAUSE");
+        println!("2 - RESUME");
+        println!("3 - EXIT\n");
         let mut input_line = String::new();
         io::stdin()
             .read_line(&mut input_line)
             .expect("Failed to read line");
-        let number: usize = input_line.trim().parse().expect("Input not an integer");
 
-        match number{
-            1 => a.pause(),
-            2 => a.resume(),
-            3 => {a.exit(); break;}
-            _ => println!("invalid input: select either 1 (to pause), 2 (to resume) or 3 (to end the program)")
+        let opt_res: Result<usize, ParseIntError> = input_line.trim().parse();
+         match opt_res{
+            Ok(number) => {
+                match number{
+                    1 => a.pause(),
+                    2 => a.resume(),
+                    3 => {a.exit(); break;}
+                    _ => println!("Invalid choice: select either 1 (PAUSE), 2 (RESUME) or 3 (EXIT)")
+                }
+            },
+            Err(_) => {println!("Option choice must be a number!")}
         }
 
     }

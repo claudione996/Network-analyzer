@@ -40,19 +40,20 @@ impl Analyzer{
     }
     /// Pausing SocketListener and report writer
     pub fn pause(&self){
-        println!("PAUSE: pausing Network Analyzer");
+        println!("PAUSE: Pausing Network Analyzer");
         self.sl.pause();
         self.report_writer.pause();
     }
     /// Resuming SocketListener and report writer
     pub fn resume(&self){
-        println!("RESUME: resuming Network Analyzer");
+        println!("RESUME: Resuming Network Analyzer");
         self.sl.resume();
         self.report_writer.resume();
     }
 
     /// Interrupts the threads created with [SocketListener] and [ReportWriter]
     pub fn exit(&self){
+        println!("EXIT: Stopping Network Analyzer");
         self.sl.exit();
         self.report_writer.exit();
     }

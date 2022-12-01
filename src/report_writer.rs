@@ -5,6 +5,8 @@ use std::io::{BufWriter, ErrorKind, Write};
 use std::os::raw::c_float;
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Sender};
+use chrono::Local;
+
 use crate::parsed_packet::ParsedPacket;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
@@ -200,6 +202,9 @@ impl ReportWriter {
         for (conn, data) in aggregated_data.iter() {
             writeln!(output,"{}{}",conn,data).expect("Error writing output file\n\r");
         }
+
+        let time_report = Local::now();
+        println!("[{}] New report created", time_report.format("%Y-%m-%d %H:%M:%S"));
     }
 
     /// Creates the directory `report/` if not present and the file `report/[filename].md`

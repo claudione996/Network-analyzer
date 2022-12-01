@@ -73,7 +73,7 @@ impl Aggregator{
         let mut aggregated_data_clone = Arc::clone(&aggregated_data);
 
         std::thread::spawn( move || {
-            println!("Network analyzer started");
+            println!("Network Analyzer Started\n");
             let mut loop1 = true;
             while loop1 {
                 let msg = rx.recv();
