@@ -1,7 +1,7 @@
 use std::thread::sleep;
 use std::time;
-use Network_analyzer::select_device;
-use Network_analyzer::socket_listener::SocketListener;
+use network_analyzer::select_device;
+use network_analyzer::socket_listener::SocketListener;
 
 fn main() {
 
@@ -14,7 +14,7 @@ fn main() {
     let sl : SocketListener = SocketListener::new(&device_name);
 
     //i get the reference to the aggregated data in the same way i do with the aggregator
-    let mut agg_data = sl.get_aggregated_data();
+    let agg_data = sl.get_aggregated_data();
 
     //i will wait for some data to be produced
     let time  = time::Duration::from_secs(5);
@@ -22,7 +22,7 @@ fn main() {
 
     //i print the aggregated data
     {
-        println!("first print:");
+        println!("First print:");
         let agg_data = agg_data.lock().unwrap();
         for (conn,data) in agg_data.iter() {
             println!("{}{}",conn,data);
@@ -35,13 +35,9 @@ fn main() {
     sleep(time);
     //i can resume it
     sl.resume();
-    //or i can stop completely both threads to never use it again
-    sl.exit();
 
-    //now i still have access to the aggregated data through the Arc in this thread but it wont be updated anymore
-    //i print the aggregated data
     {
-        println!("second print:");
+        println!("Second print:");
         let agg_data = agg_data.lock().unwrap();
         for (conn,data) in agg_data.iter() {
             println!("{}{}",conn,data);

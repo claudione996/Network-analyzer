@@ -1,8 +1,6 @@
-use std::{io, num::ParseIntError};
-use Network_analyzer::analyzer::Analyzer;
-use Network_analyzer::select_device;
-use std::sync::mpsc::{channel, Sender};
-use Network_analyzer::parser::Parser;
+use network_analyzer::select_device;
+use std::sync::mpsc::channel;
+use network_analyzer::parser::Parser;
 
 fn main() {
     // I am creating a channel where the parser will send the parsed packets

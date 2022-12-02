@@ -57,11 +57,6 @@ impl SocketListener {
     self.parser.resume_iter_cap();
     }
 
-    /// Interrupts the loop of the [Parser] thread, allowing the thread to end
-    pub fn exit(&self){
-        self.parser.exit_iter_cap();
-    }
-
     /// Returns aggregated data from the [Aggregator] of [SocketListener]
     pub fn get_aggregated_data(&self)-> Arc<Mutex<HashMap<Connection,ConnectionMetadata>>>{
         self.aggregator.get_aggregated_data()

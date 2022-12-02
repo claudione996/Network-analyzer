@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, RecvError, Sender};
+use std::sync::mpsc::{channel, Sender};
 use crate::parsed_packet::ParsedPacket;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
@@ -69,11 +69,10 @@ impl Aggregator{
     pub fn new() -> Self {
         let(tx,rx) = channel::<ParsedPacket>();
         //declare an hashmap with key as tuple of (destination_ip,port) and value as tuple of (protocol, size, first_timestamp, last_timestamp)
-        let mut aggregated_data = Arc::new(Mutex::new(HashMap::<Connection,ConnectionMetadata>::new()));
-        let mut aggregated_data_clone = Arc::clone(&aggregated_data);
+        let aggregated_data = Arc::new(Mutex::new(HashMap::<Connection,ConnectionMetadata>::new()));
+        let aggregated_data_clone = Arc::clone(&aggregated_data);
 
         std::thread::spawn( move || {
-            println!("Network Analyzer Started\n");
             let mut loop1 = true;
             while loop1 {
                 let msg = rx.recv();
@@ -84,19 +83,17 @@ impl Aggregator{
                         loop1 = false;
                     },
                     Ok(p) => {
-                      //  println!("processing: {:?}", p);
 
                         let key = Connection::new(p.source_ip, p.destination_ip, p.source_port, p.destination_port, p.protocol);
                         let mut aggregated_map = aggregated_data_clone.lock().unwrap();
 
                         if aggregated_map.contains_key(&key) {
-                         //   println!("Key already exists, updating value");
+                            //Key already exists, updating value
                             let mut value = aggregated_map.get_mut(&key).unwrap();
                             (*value).size = p.size + (*value).size;
                             (*value).last_timestamp = p.timestamp;
-                            //aggregated_map.insert(key,(*value).clone());
                         } else {
-                         //   println!("Key does not exist, inserting new value");
+                            //Key does not exist, inserting new value
                             let value = ConnectionMetadata::new(p.size,p.timestamp.clone(),p.timestamp);
                             aggregated_map.insert(key,value);
                         }

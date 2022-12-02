@@ -1,9 +1,8 @@
 extern crate core;
 
-use std::fs::File;
 use std::io;
 use std::num::ParseIntError;
-use pcap::{Active, Capture, Device, Packet};
+use pcap::{Active, Capture, Device};
 
 pub mod aggregator;
 pub mod parsed_packet;
@@ -12,14 +11,6 @@ pub mod socket_listener;
 pub mod analyzer;
 pub mod report_writer;
 pub mod report_entry;
-
-//used only for debugging
-pub fn select_debug() -> Capture<Active> {
-    let cap = Capture::from_device("\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}").unwrap()
-        .promisc(true)
-        .open().unwrap();
-    return cap;
-}
 
 pub fn select_default() -> Capture<Active> {
     let main_device = Device::lookup().expect("lookup error").expect("No default device found");

@@ -2,12 +2,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{BufWriter, ErrorKind, Write};
-use std::os::raw::c_float;
 use std::sync::{Arc, Condvar, Mutex};
-use std::sync::mpsc::{channel, Sender};
 use chrono::Local;
 
-use crate::parsed_packet::ParsedPacket;
 use crate::report_entry::{Connection, ConnectionMetadata};
 
 ///enum to indicate the state to be assumed by the writing thread
@@ -100,34 +97,29 @@ impl ReportWriter {
         let aggregated_data_clone = aggregated_data.clone();
 
         std::thread::spawn( move || {
-            //println!("ReportWriter thread started");
             let mut loop1 = true;
             while loop1 {
-                let mut cmd = cmd_clone.lock().unwrap();
+                let cmd = cmd_clone.lock().unwrap();
                 match *cmd {
                     Command::EXIT => {
-                       // println!("ReportWriter thread exiting");
                         loop1 = false;
                     },
                     Command::PAUSE => {
-                        //println!("ReportWriter thread paused");
-                        cmd = cv_cmd_clone.wait_while(cmd, |cmd| *cmd == Command::PAUSE).unwrap();
+                        let _cmd = cv_cmd_clone.wait_while(cmd, |cmd| *cmd == Command::PAUSE).unwrap();
                     },
                     Command::PROCEED => {
-                        let rwr_time = rwr_time_clone.lock().unwrap();
-                       // println!("ReportWriter thread proceeding, will wait for: {:?}", rwr_time);
+                        let rwr_time = *rwr_time_clone.lock().unwrap();
+                        //println!("ReportWriter thread proceeding, will wait for: {:?}", rwr_time);
                         //release the lock on cmd
                         drop(cmd);
-                        std::thread::sleep(std::time::Duration::from_secs(*rwr_time as u64));
+                        std::thread::sleep(std::time::Duration::from_secs(rwr_time as u64));
                         //get the lock on cmd again and check if it is still "PROCEED"
                         let cmd = cmd_clone.lock().unwrap();
                         if *cmd == Command::PROCEED{
-                         //   println!("ReportWriter thread awake, writing report");
+                            //ReportWriter thread awake, writing report
                             let report_path = report_path_clone.lock().unwrap();
                             ReportWriter::write_report((*report_path).as_str(), aggregated_data_clone.clone());
                         }
-                        else { //println!("Report Writer received command: {:?} while sleeping so the report will not be written",*cmd);
-                            }
                     }
                 }
             }
@@ -150,7 +142,7 @@ impl ReportWriter {
     }
 
     /// Interrupts the loop of the [ReportWriter] thread, allowing the thread to end
-    pub fn exit(&self) {
+    fn exit(&self) {
         let mut cmd = self.cmd.lock().unwrap();
         *cmd = Command::EXIT;
         self.cv_cmd.notify_one();
@@ -204,7 +196,7 @@ impl ReportWriter {
         }
 
         let time_report = Local::now();
-        println!("[{}] New report created", time_report.format("%Y-%m-%d %H:%M:%S"));
+        println!("[{}] '{}' updated", time_report.format("%Y-%m-%d %H:%M:%S"), filename);
     }
 
     /// Creates the directory `report/` if not present and the file `report/[filename].md`
@@ -234,11 +226,18 @@ impl ReportWriter {
         let mut path =String::from("report/");
         path.push_str(filename);
         path.push_str(".md");
-        //println!("{path}");
         let file=File::create(path.as_str()).expect("Error creating output file\n\r");
         let output = BufWriter::new(file);
         return output;
 
     }
 
+}
+
+/// When the ReportWriter instance is dropped also the associated thread
+/// will be stopped
+impl Drop for ReportWriter{
+    fn drop(&mut self) {
+        self.exit();
+    }
 }

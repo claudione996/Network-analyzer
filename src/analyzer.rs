@@ -1,4 +1,3 @@
-use std::io;
 use crate::report_writer::ReportWriter;
 use crate::socket_listener::SocketListener;
 
@@ -49,12 +48,5 @@ impl Analyzer{
         println!("RESUME: Resuming Network Analyzer");
         self.sl.resume();
         self.report_writer.resume();
-    }
-
-    /// Interrupts the threads created with [SocketListener] and [ReportWriter]
-    pub fn exit(&self){
-        println!("EXIT: Stopping Network Analyzer");
-        self.sl.exit();
-        self.report_writer.exit();
     }
 }

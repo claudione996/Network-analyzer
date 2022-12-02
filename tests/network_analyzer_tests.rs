@@ -1,11 +1,8 @@
-use std::sync::{Arc, mpsc};
-use pcap::{Capture, Device};
-//import lib.rs
-use Network_analyzer::*;
-use Network_analyzer::aggregator::Aggregator;
-use Network_analyzer::parsed_packet::ParsedPacket;
-use Network_analyzer::parser::Parser;
-use Network_analyzer::report_entry::Connection;
+use std::sync::mpsc;
+use network_analyzer::aggregator::Aggregator;
+use network_analyzer::parsed_packet::ParsedPacket;
+use network_analyzer::parser::Parser;
+use network_analyzer::report_entry::Connection;
 
 
 #[test]
@@ -22,7 +19,7 @@ fn test_aggregator() {
                                   ParsedPacket::new((timestamp1+1).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
                                   ParsedPacket::new((timestamp1+2).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1),
                                   ParsedPacket::new((timestamp1+3).to_string(),source_ip1.clone(),destination_ip1.clone(),Some(source_port1),Some(destination_port1),protocol1.clone(),size1)];
-    let mut aggregator = Aggregator::new();
+    let aggregator = Aggregator::new();
     //send each packet to the aggregator
     for packet in list {
         aggregator.send(packet);
@@ -69,7 +66,7 @@ fn test_aggregator_multiple_destinations() {
     let list2:Vec<ParsedPacket> = vec![ParsedPacket::new(timestamp2.to_string(),source_ip2.clone(),destination_ip2.clone(),Some(source_port2),Some(destination_port2),protocol2.clone(),size2),
                                    ParsedPacket::new((timestamp2+1).to_string(),source_ip2.clone(),destination_ip2.clone(),Some(source_port2),Some(destination_port2),protocol2.clone(),size2)];
 
-    let mut aggregator = Aggregator::new();
+    let aggregator = Aggregator::new();
     //send each packet to the aggregator
     for packet in list1 {
         aggregator.send(packet);
@@ -124,7 +121,7 @@ fn test_parser(){
 
 #[test]
 fn test_parser_with_aggregator(){
-    let mut aggregator = Aggregator::new();
+    let aggregator = Aggregator::new();
     let mut _parser = Parser::new("\\Device\\NPF_{CD484432-E2CB-46E8-8FCC-3D919CF3533E}",aggregator.get_sender());
     //wait for the parser/aggregator to process some packets
     println!("waiting for the parser/aggregator to process some packets");

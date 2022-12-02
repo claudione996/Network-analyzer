@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time;
-use Network_analyzer::aggregator::Aggregator;
-use Network_analyzer::parser::Parser;
-use Network_analyzer::report_entry::{Connection, ConnectionMetadata};
-use Network_analyzer::select_device;
+use network_analyzer::aggregator::Aggregator;
+use network_analyzer::parser::Parser;
+use network_analyzer::report_entry::{Connection, ConnectionMetadata};
+use network_analyzer::select_device;
 
 fn main() {
 
@@ -20,7 +20,7 @@ fn main() {
     let device_name = select_device();
 
     //initialize the parser with the aggregator_tx Sender so that it will send the parsed packets to the aggregator
-    let parser= Parser::new(&device_name, aggregator_tx.clone());
+    let _parser= Parser::new(&device_name, aggregator_tx.clone());
 
     //here i get the reference to the aggregated data produced and updated by the aggregator each time it receives a parsed packet
     let aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>> = aggregator.get_aggregated_data();

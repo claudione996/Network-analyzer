@@ -1,12 +1,10 @@
-use std::{io, num::ParseIntError};
-use Network_analyzer::analyzer::Analyzer;
-use Network_analyzer::select_device;
-use std::sync::mpsc::{channel, Sender};
-use Network_analyzer::parser::Parser;
+use network_analyzer::select_device;
+use std::sync::mpsc::channel;
+use network_analyzer::parser::Parser;
 
 
 fn main() {
-    // I am creating a channel where the parser will send the parsed packets
+    //I am creating a channel where the parser will send the parsed packets
     let (tx, rx) = channel();
     //select the first device from all the network devices of the pc
     println!("Select the first device to sniff:");
@@ -14,10 +12,10 @@ fn main() {
     //select the second device from all the network devices of the pc
     println!("Select the second device to sniff:");
     let second_device_name = select_device();
-    // I create the parsers listening to the devices and both sending the parsed packets to the channel i just created
-    let parser1 = Parser::new(&first_device_name, tx.clone());
-    let parser2 = Parser::new(&second_device_name, tx.clone());
-    // Now I can use rx to receive the parsed packets from all the parsers
+    //I create the parsers listening to the devices and both sending the parsed packets to the channel i just created
+    let _parser1 = Parser::new(&first_device_name, tx.clone());
+    let _parser2 = Parser::new(&second_device_name, tx.clone());
+    //Now I can use rx to receive the parsed packets from all the parsers
     while let Ok(parsed_packet) = rx.recv() {
         println!("Received packet: {:?}", parsed_packet);
     }

@@ -1,7 +1,7 @@
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{Sender};
-use chrono::{DateTime, NaiveDateTime, Utc, Local, FixedOffset, TimeZone};
-use etherparse::{Icmpv4Type, Icmpv6Type, IpHeader, PacketHeaders, TransportHeader};
+use chrono::{NaiveDateTime, Local, FixedOffset, TimeZone};
+use etherparse::{Icmpv4Type, Icmpv6Type, PacketHeaders};
 use etherparse::IpHeader::{Version4, Version6};
 use etherparse::TransportHeader::{Icmpv4, Icmpv6, Tcp, Udp};
 use pcap::{Capture, Packet};
@@ -93,24 +93,23 @@ impl Parser{
                 match cap.next_packet() {
                     Ok(packet) => {
 
-                        let mut cmd = cmd.lock().unwrap();
+                        let cmd = cmd.lock().unwrap();
                         match *cmd {
                             Command::EXIT => {
-                               // println!("ReportWriter thread exiting");
                                 break;
                             },
                             Command::PAUSE => {
-                                let cmd = cv.wait_while(cmd, |cmd| *cmd == Command::PAUSE).unwrap();
+                                let _cmd = cv.wait_while(cmd, |cmd| *cmd == Command::PAUSE).unwrap();
                             },
                             Command::PROCEED => {
                                 let p=Self::parse_packet(packet);
                                 match p {
-                                    None => //println!("packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)")
+                                    None => //Packet not valid for parsing (neither IP/TCP, IP/UDP or IP/ICMP)
                                     {},
                                     Some(x) => match aggregator_tx.send(x) {
                                         Ok(x) => x,
                                         Err(_) => {
-                                           //c println!("Error sending parsed packet, receiver dropped, terminating parser thread");
+                                            //Error sending parsed packet, receiver dropped, terminating parser thread
                                             break;
                                         },
                                     },
@@ -118,7 +117,7 @@ impl Parser{
                             }
                         }
                     },
-                    Err(_) => { //println!("Packet Error");
+                    Err(_) => { 
                         break }
                 }
             }
@@ -141,7 +140,7 @@ impl Parser{
     }
 
     /// Interrupts the loop of the [Parser] thread, allowing the thread to end
-    pub fn exit_iter_cap(&self){
+    fn exit_iter_cap(&self){
         let mut cmd =self.cmd.lock().unwrap();
         *cmd=Command::EXIT;
         self.cv.notify_one();
@@ -156,11 +155,11 @@ impl Parser{
     /// This function is used internally by the [Parser] to parse the packets it receives
     fn parse_packet(packet:Packet) -> Option<ParsedPacket> {
         let ph=PacketHeaders::from_ethernet_slice(&packet).unwrap_or(PacketHeaders{ link: None, vlan: None, ip:None, transport: None, payload: &[] });
-        let mut source=String::new();
-        let mut destination=String::new();
-        let mut size = 0;
-        let mut ts= String::new();
-        let mut trs_protocol = String::new();
+        let source;
+        let destination;
+        let size;
+        let ts;
+        let trs_protocol;
         let mut src_port = None;
         let mut dest_port = None;
         match ph.ip {
@@ -193,7 +192,7 @@ impl Parser{
                 ts = dt.format("%Y-%m-%d %H:%M:%S").to_string();
             },
             None => {
-               // println!("NO IP HEADER ERR: {:?} ",ph);
+                //NO IP HEADER
                 return  None;
             }
         }
@@ -229,7 +228,7 @@ impl Parser{
                 Icmpv6Type::EchoReply(_) => String::from("ICMPv6: Echo Reply"),
             },
             None => {
-              //  println!("NO TRANSPORT LEVEL ERR: {:?} ",ph);
+                //NO TRANSPORT LEVEL
                 return None;
             }
         }
@@ -244,7 +243,6 @@ impl Parser{
 /// will be stopped
 impl Drop for Parser{
     fn drop(&mut self) {
-        //println!("exitParser");
         self.exit_iter_cap();
     }
 }

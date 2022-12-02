@@ -1,13 +1,9 @@
 use std::{io, num::ParseIntError};
-use Network_analyzer::analyzer::Analyzer;
-use Network_analyzer::select_device;
+use network_analyzer::analyzer::Analyzer;
+use network_analyzer::select_device;
 
 
 fn main() {
-    //scheda di Binco: "\\Device\\NPF_{CD484432-E2CB-46E8-8FCC-3D919CF3533E}"
-    //scheda di giovanni: "\\Device\\NPF_{DFADCF5E-E518-4EB5-A225-3126223CB9A2}"
-    //scheda di claudione: "en0"
-    //scheda di paolo: "\\Device\\NPF_{CA1DFCEA-2C68-4269-9347-4B04CB3E6420}"
 
     println!("Welcome to Network Analyzer!\n");
 
@@ -44,7 +40,7 @@ fn main() {
         println!("Options");
         println!("1 - PAUSE");
         println!("2 - RESUME");
-        println!("3 - EXIT\n");
+        println!("3 - EXIT");
         let mut input_line = String::new();
         io::stdin()
             .read_line(&mut input_line)
@@ -56,7 +52,7 @@ fn main() {
                 match number{
                     1 => a.pause(),
                     2 => a.resume(),
-                    3 => {a.exit(); break;}
+                    3 => {println!("EXIT: Stopping Network Analyzer"); break;}
                     _ => println!("Invalid choice: select either 1 (PAUSE), 2 (RESUME) or 3 (EXIT)")
                 }
             },
