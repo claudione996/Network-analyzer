@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use std::sync::mpsc::{channel, Sender};
 use crate::parsed_packet::ParsedPacket;
 use crate::report_entry::{Connection, ConnectionMetadata};
@@ -51,7 +51,7 @@ use crate::report_entry::{Connection, ConnectionMetadata};
 #[derive(Clone)]
 pub struct Aggregator{
     tx: Sender<ParsedPacket>,
-    aggregated_data: Arc<Mutex<HashMap<Connection,ConnectionMetadata>>>
+    aggregated_data: Arc<RwLock<HashMap<Connection,ConnectionMetadata>>>
 }
 impl Aggregator{
     ///Creates the [Aggregator] and a thread that receives [ParsedPacket] via channel and inserts them into the [Aggregator] map
@@ -69,7 +69,7 @@ impl Aggregator{
     pub fn new() -> Self {
         let(tx,rx) = channel::<ParsedPacket>();
         //declare an hashmap with key as tuple of (destination_ip,port) and value as tuple of (protocol, size, first_timestamp, last_timestamp)
-        let aggregated_data = Arc::new(Mutex::new(HashMap::<Connection,ConnectionMetadata>::new()));
+        let aggregated_data = Arc::new(RwLock::new(HashMap::<Connection,ConnectionMetadata>::new()));
         let aggregated_data_clone = Arc::clone(&aggregated_data);
 
         std::thread::spawn( move || {
@@ -85,7 +85,7 @@ impl Aggregator{
                     Ok(p) => {
 
                         let key = Connection::new(p.source_ip, p.destination_ip, p.source_port, p.destination_port, p.protocol);
-                        let mut aggregated_map = aggregated_data_clone.lock().unwrap();
+                        let mut aggregated_map = aggregated_data_clone.write().unwrap();
 
                         if aggregated_map.contains_key(&key) {
                             //Key already exists, updating value
@@ -110,8 +110,9 @@ impl Aggregator{
         self.tx.send(packet).unwrap();
     }
 
-    ///Returns aggregated data from the [Aggregator]
-    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<Connection,ConnectionMetadata>>> {
+    ///Returns a reference to the aggregated data from the [Aggregator]
+    /// it is a single-writer multiple-readers kind of reference
+    pub fn get_aggregated_data(&self) -> Arc<RwLock<HashMap<Connection,ConnectionMetadata>>> {
         Arc::clone(&self.aggregated_data)
     }
 

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use crate::aggregator::Aggregator;
 use crate::parser::Parser;
 use crate::report_entry::{Connection, ConnectionMetadata};
@@ -58,7 +58,7 @@ impl SocketListener {
     }
 
     /// Returns aggregated data from the [Aggregator] of [SocketListener]
-    pub fn get_aggregated_data(&self)-> Arc<Mutex<HashMap<Connection,ConnectionMetadata>>>{
+    pub fn get_aggregated_data(&self)-> Arc<RwLock<HashMap<Connection,ConnectionMetadata>>>{
         self.aggregator.get_aggregated_data()
     }
 

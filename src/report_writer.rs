@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{BufWriter, ErrorKind, Write};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Condvar, Mutex, RwLock};
 use chrono::Local;
 
 use crate::report_entry::{Connection, ConnectionMetadata};
@@ -56,7 +56,7 @@ enum Command {
 pub struct ReportWriter{
     report_path: Arc<Mutex<String>>,
     rewrite_time: Arc<Mutex<u64>>,
-    aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>,
+    aggregated_data: Arc<RwLock<HashMap<Connection, ConnectionMetadata>>>,
     cmd: Arc<Mutex<Command>>,
     cv_cmd: Arc<Condvar>
 }
@@ -82,7 +82,7 @@ impl ReportWriter {
     ///
     /// # Panics
     /// Spawn a new thread that will panic if the file or the `report/` folder cannot be opened/created
-    pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) -> Self {
+    pub fn new(report_path: String, rewrite_time: u64, aggregated_data: Arc<RwLock<HashMap<Connection, ConnectionMetadata>>>) -> Self {
         //generate all the Arcs
         let report_path = Arc::new(Mutex::new(report_path));
         let rwr_time = Arc::new(Mutex::new(rewrite_time));
@@ -161,7 +161,7 @@ impl ReportWriter {
     }
 
     /// Return aggregated data
-    pub fn get_aggregated_data(&self) -> Arc<Mutex<HashMap<Connection, ConnectionMetadata>>> {
+    pub fn get_aggregated_data(&self) -> Arc<RwLock<HashMap<Connection, ConnectionMetadata>>> {
         Arc::clone(&self.aggregated_data)
     }
 
@@ -184,8 +184,8 @@ impl ReportWriter {
     /// # Panics
     /// panics if the file or the `report/` folder cannot be created/opened
     /// also panics if the aggregated data lock is poisoned
-    fn write_report(filename:&str,aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>>) {
-        let aggregated_data = aggregated_data.lock().unwrap();
+    fn write_report(filename:&str,aggregated_data: Arc<RwLock<HashMap<Connection, ConnectionMetadata>>>) {
+        let aggregated_data = aggregated_data.read().unwrap();
 
         let mut output = ReportWriter::create_dir_report(filename);
         writeln!(output, "|   Src IP address  |  Dst IP address   |  Src port |  Dst port |  Protocol |    Bytes      |  Initial timestamp    |   Final timestamp  |").expect("Error writing output file\n\r");

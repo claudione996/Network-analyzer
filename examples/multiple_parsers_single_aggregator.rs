@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use std::thread::sleep;
 use std::time;
 use network_analyzer::aggregator::Aggregator;
@@ -26,20 +26,18 @@ fn main() {
     let _parser2 = Parser::new(&second_device_name, aggregator_tx.clone());
 
     //Here I get the reference to the aggregated data produced and updated by the aggregator each time it receives a parsed packet
-    let aggregated_data: Arc<Mutex<HashMap<Connection, ConnectionMetadata>>> = aggregator.get_aggregated_data();
+    let aggregated_data: Arc<RwLock<HashMap<Connection, ConnectionMetadata>>> = aggregator.get_aggregated_data();
 
     let time  = time::Duration::from_secs(5);
     loop {
         //I will print the aggregated data each 5s
         sleep(time);
         {
-            let aggregated_data = aggregated_data.lock().unwrap();
+            let aggregated_data = aggregated_data.read().unwrap();
             for (conn,data) in aggregated_data.iter() {
                 println!("{}{}",conn,data);
             }
         }
-        //here I release the lock onto the aggregated_data to let the aggregator write into it
-        //while this thread sleeps
     }
 
 }
